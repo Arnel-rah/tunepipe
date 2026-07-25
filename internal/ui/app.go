@@ -48,6 +48,7 @@ func NewModel(engine *player.Engine) Model {
 		statusMsg:   "Pret. Appuie sur '/' pour chercher.",
 		width:       80,
 		height:      24,
+		isPlaying:   false,
 	}
 }
 
@@ -66,9 +67,13 @@ func fetchTrack(engine *player.Engine, track ytdlp.Track) tea.Cmd {
 	return func() tea.Msg {
 		directURL, err := ytdlp.FetchDirectURL(track.ID)
 		if err == nil {
-			_ = engine.PlayURL(directURL)
+			err = engine.PlayURL(directURL)
+			if err == nil {
+				return trackReadyMsg{track: track, directURL: directURL, err: nil}
+			}
+			return trackReadyMsg{track: track, directURL: "", err: err}
 		}
-		return trackReadyMsg{track: track, directURL: directURL, err: err}
+		return trackReadyMsg{track: track, directURL: "", err: err}
 	}
 }
 
@@ -124,6 +129,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case trackReadyMsg:
 		if msg.err != nil {
 			m.statusMsg = fmt.Sprintf("Erreur lecture: %v", msg.err)
+			m.isPlaying = false
 		} else {
 			m.isPlaying = true
 			m.statusMsg = fmt.Sprintf("Lecture en cours: %s", msg.track.Title)
@@ -133,7 +139,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "ctrl+c":
-			m.engine.Stop()
+			if m.engine != nil {
+				m.engine.Stop()
+			}
 			return m, tea.Quit
 
 		case "/":
@@ -153,13 +161,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursor--
 			}
 
-		case "space":
-			_ = m.engine.TogglePause()
-			m.isPlaying = !m.isPlaying
-			if m.isPlaying {
-				m.statusMsg = "Lecture"
+		case " ":
+			if m.engine != nil && m.currentTrack != nil {
+				err := m.engine.TogglePause()
+				if err != nil {
+					m.statusMsg = fmt.Sprintf("Erreur pause: %v", err)
+				} else {
+					m.isPlaying = !m.isPlaying
+					if m.isPlaying {
+						m.statusMsg = "Lecture"
+					} else {
+						m.statusMsg = "Pause"
+					}
+				}
 			} else {
-				m.statusMsg = "Pause"
+				m.statusMsg = "Aucun morceau en cours de lecture"
 			}
 
 		case "enter":
