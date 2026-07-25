@@ -56,6 +56,8 @@ type Model struct {
 	elapsedTime  time.Duration
 	scrobbles    int
 	tickCount    int
+
+	confirmQuit bool
 }
 
 func NewModel(engine *player.Engine) Model {
@@ -77,6 +79,7 @@ func NewModel(engine *player.Engine) Model {
 		isPlaying:    false,
 		totalMinutes: 0,
 		scrobbles:    0,
+		confirmQuit:  false,
 	}
 }
 
@@ -210,6 +213,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
+	if m.confirmQuit {
+		if keyMsg, ok := msg.(tea.KeyMsg); ok {
+			switch keyMsg.String() {
+			case "y", "Y":
+				if m.engine != nil {
+					m.engine.Stop()
+				}
+				return m, tea.Quit
+			case "n", "N", "esc":
+				m.confirmQuit = false
+				m.statusMsg = "quit cancelled"
+				m.statusKind = "idle"
+				return m, nil
+			}
+		}
+		return m, nil
+	}
+
 	if m.isSearching {
 		if keyMsg, ok := msg.(tea.KeyMsg); ok {
 			switch keyMsg.String() {
@@ -260,10 +281,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if keyMsg, ok := msg.(tea.KeyMsg); ok {
 		switch keyMsg.String() {
 		case "q", "ctrl+c":
-			if m.engine != nil {
-				m.engine.Stop()
-			}
-			return m, tea.Quit
+			m.confirmQuit = true
+			m.statusMsg = "quit? (y/n)"
+			m.statusKind = "idle"
+			return m, nil
 
 		case "/":
 			m.isSearching = true
@@ -369,11 +390,22 @@ func (m Model) View() string {
 		footer,
 	)
 
+	if m.confirmQuit {
+		confirmBox := ConfirmStyle.Render(
+			fmt.Sprintf("%s %s %s",
+				AccentTextStyle.Render(IconBullet),
+				TitleStyle.Render("Are you sure you want to quit?"),
+				MutedStyle.Render("(y/n)"),
+			),
+		)
+		body = lipgloss.JoinVertical(lipgloss.Center, body, "", confirmBox)
+	}
+
 	return body
 }
 
 func renderHeader(m Model, width int) string {
-	logo := LogoStyle.Render("✦ tunepipe")
+	logo := LogoStyle.Render(IconDiamond + " tunepipe")
 
 	stats := fmt.Sprintf("%s %dh  %s %d",
 		StatLabelStyle.Render("listened"),
@@ -392,19 +424,19 @@ func renderHeader(m Model, width int) string {
 
 func renderNowPlaying(m Model, width int) string {
 	if m.currentTrack == nil {
-		return MutedStyleDim.Render("┄ nothing playing ┄")
+		return MutedStyleDim.Render(IconDiamond + " nothing playing " + IconDiamond)
 	}
 
 	var status string
 	var style lipgloss.Style
 	if m.isPlaying {
-		status = "▶"
+		status = IconPlay
 		style = StatusTextPlaying
 	} else if m.elapsedTime.Seconds() >= m.currentTrack.Duration {
-		status = "■"
+		status = IconStop
 		style = StatusTextIdle
 	} else {
-		status = "⏸"
+		status = IconPause
 		style = StatusTextPaused
 	}
 
@@ -413,7 +445,7 @@ func renderNowPlaying(m Model, width int) string {
 
 	return fmt.Sprintf("%s %s %s %s",
 		style.Render(status),
-		DividerStyle.Render("▸"),
+		DividerStyle.Render(IconArrow),
 		title,
 		MutedStyleDim.Render("by "+artist),
 	)
@@ -425,10 +457,11 @@ func renderSearch(m Model, width int) string {
 	}
 
 	if len(m.searchResults) > 0 {
-		return MutedStyleDim.Render(fmt.Sprintf("✦ %d results • press / to search", len(m.searchResults)))
+		return MutedStyleDim.Render(fmt.Sprintf("%s %d results • press / to search",
+			IconDiamond, len(m.searchResults)))
 	}
 
-	return MutedStyleDim.Render("✦ press / to search")
+	return MutedStyleDim.Render(IconDiamond + " press / to search")
 }
 
 func renderResults(m Model, width int) string {
@@ -454,7 +487,8 @@ func renderResultLine(track ytdlp.Track, index int, selected bool, width int) st
 	artist := truncate(track.Uploader, 20)
 
 	if selected {
-		return RowSelectedStyle.Render(fmt.Sprintf("❯ %s %s  %s", num, title, artist))
+		return RowSelectedStyle.Render(fmt.Sprintf("%s %s %s  %s",
+			IconArrow, num, title, artist))
 	}
 	return RowStyle.Render(fmt.Sprintf("  %s %s  %s", num, title, artist))
 }
@@ -497,14 +531,14 @@ func renderProgress(m Model, width int) string {
 
 	var bar string
 	if isFinished {
-		bar = MutedStyleDim.Render(strings.Repeat("━", barWidth))
+		bar = MutedStyleDim.Render(strings.Repeat(CharProgress, barWidth))
 	} else if filled <= 0 {
-		bar = MutedStyleDim.Render(strings.Repeat("─", barWidth))
+		bar = MutedStyleDim.Render(strings.Repeat(CharTrack, barWidth))
 	} else if filled >= barWidth {
-		bar = ProgressBarStyle.Render(strings.Repeat("━", barWidth))
+		bar = ProgressBarStyle.Render(strings.Repeat(CharProgress, barWidth))
 	} else {
-		bar = ProgressBarStyle.Render(strings.Repeat("━", filled)) +
-			MutedStyleDim.Render(strings.Repeat("─", barWidth-filled))
+		bar = ProgressBarStyle.Render(strings.Repeat(CharProgress, filled)) +
+			MutedStyleDim.Render(strings.Repeat(CharTrack, barWidth-filled))
 	}
 
 	if isFinished {
@@ -515,8 +549,6 @@ func renderProgress(m Model, width int) string {
 }
 
 func renderControls(m Model, width int) string {
-	var _ []string
-
 	keys := []struct {
 		key   string
 		label string
@@ -536,7 +568,7 @@ func renderControls(m Model, width int) string {
 		))
 	}
 
-	line := strings.Join(parts, "  •  ")
+	line := strings.Join(parts, "  "+IconBullet+"  ")
 	return MutedStyleDim.Render(line)
 }
 
@@ -547,18 +579,23 @@ func renderFooter(m Model, width int) string {
 	}
 
 	var style lipgloss.Style
+	var icon string
 	switch m.statusKind {
 	case "playing":
 		style = StatusTextPlaying
+		icon = IconPlay
 	case "paused":
 		style = StatusTextPaused
+		icon = IconPause
 	case "error":
 		style = StatusTextError
+		icon = IconCross
 	default:
 		style = StatusTextIdle
+		icon = IconBullet
 	}
 
-	statusText := style.Render("● " + status)
+	statusText := style.Render(icon + " " + status)
 
 	keys := MutedStyleDim.Render("space · / · j/k · enter · q")
 

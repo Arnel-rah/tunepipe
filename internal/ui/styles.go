@@ -64,3 +64,158 @@ var (
 	KeyHintTextStyle = lipgloss.NewStyle().
 				Foreground(TextMuted)
 )
+
+const (
+	IconPlay      = "▶"
+	IconPause     = "⏸"
+	IconStop      = "⏹"
+	IconNext      = "⏭"
+	IconPrev      = "⏮"
+	IconSearch    = "⌕"
+	IconMusic     = "♫"
+	IconNote      = "♪"
+	IconStar      = "★"
+	IconBullet    = "●"
+	IconArrow     = "▸"
+	IconDiamond   = "✦"
+	IconCheck     = "✓"
+	IconCross     = "✗"
+	IconHeart     = "♥"
+	IconSpeaker   = "♩"
+	IconHeadphone = ""
+	IconFolder    = ""
+	IconFile      = ""
+	IconGit       = ""
+	IconTwitter   = ""
+	IconGear      = ""
+	IconHome      = ""
+	IconUser      = ""
+	IconClock     = ""
+	IconCalendar  = ""
+	IconList      = ""
+	IconMenu      = ""
+	IconSettings  = ""
+)
+
+// Styles avec icônes intégrées
+var (
+	PlayIconStyle = lipgloss.NewStyle().
+			Foreground(AccentEmerald).
+			Bold(true).
+			Render(IconPlay)
+
+	PauseIconStyle = lipgloss.NewStyle().
+			Foreground(AccentAmber).
+			Bold(true).
+			Render(IconPause)
+
+	StopIconStyle = lipgloss.NewStyle().
+			Foreground(TextMuted).
+			Render(IconStop)
+
+	SearchIconStyle = lipgloss.NewStyle().
+			Foreground(AccentSky).
+			Render(IconSearch)
+
+	MusicIconStyle = lipgloss.NewStyle().
+			Foreground(AccentIndigo).
+			Render(IconMusic)
+
+	ArrowIconStyle = lipgloss.NewStyle().
+			Foreground(TextDim).
+			Render(IconArrow)
+
+	DiamondIconStyle = lipgloss.NewStyle().
+				Foreground(AccentSky).
+				Render(IconDiamond)
+
+	BulletIconStyle = lipgloss.NewStyle().
+			Foreground(TextDim).
+			Render(IconBullet)
+
+	HeartIconStyle = lipgloss.NewStyle().
+			Foreground(AccentRose).
+			Render(IconHeart)
+
+	SpeakerIconStyle = lipgloss.NewStyle().
+				Foreground(AccentIndigo).
+				Render(IconSpeaker)
+
+	NoteIconStyle = lipgloss.NewStyle().
+			Foreground(AccentSky).
+			Render(IconNote)
+
+	StarIconStyle = lipgloss.NewStyle().
+			Foreground(AccentAmber).
+			Render(IconStar)
+
+	CheckIconStyle = lipgloss.NewStyle().
+			Foreground(AccentEmerald).
+			Render(IconCheck)
+
+	CrossIconStyle = lipgloss.NewStyle().
+			Foreground(AccentRose).
+			Render(IconCross)
+)
+
+func GetPlayIcon(playing bool) string {
+	if playing {
+		return PlayIconStyle
+	}
+	return PauseIconStyle
+}
+
+func GetStatusIcon(state string) string {
+	switch state {
+	case "playing":
+		return PlayIconStyle
+	case "paused":
+		return PauseIconStyle
+	case "error":
+		return CrossIconStyle
+	default:
+		return BulletIconStyle
+	}
+}
+
+func GetSearchIcon(focused bool) string {
+	if focused {
+		return SearchIconStyle
+	}
+	return SearchIconStyle
+}
+
+func GetArrowIcon(selected bool) string {
+	if selected {
+		return ArrowIconStyle
+	}
+	return ArrowIconStyle
+}
+
+const (
+	CharProgress = "━"
+	CharTrack    = "─"
+	CharDot      = "●"
+)
+
+const (
+	BorderTop    = "─"
+	BorderBottom = "─"
+	BorderLeft   = "│"
+	BorderRight  = "│"
+	CornerTL     = "┌"
+	CornerTR     = "┐"
+	CornerBL     = "└"
+	CornerBR     = "┘"
+	LineH        = "─"
+	LineV        = "│"
+	LineCross    = "┼"
+)
+
+var (
+	ConfirmStyle = lipgloss.NewStyle().
+		Padding(1, 2).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(AccentSky).
+		Foreground(TextPrimary)
+)
