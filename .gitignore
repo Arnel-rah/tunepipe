@@ -1,0 +1,18 @@
+# Binary
+/tunepipe
+/tunepipe.exe
+*.exe
+
+# Dependencies & Build
+/vendor/
+*.o
+*.a
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
