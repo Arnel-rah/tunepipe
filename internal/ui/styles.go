@@ -2,220 +2,101 @@ package ui
 
 import "github.com/charmbracelet/lipgloss"
 
+// Flat design system — no borders, no boxed cards. Structure comes from
+// spacing, weight, and a single violet accent, not from containers.
 var (
-	TextPrimary   = lipgloss.Color("#F0F0F8")
-	TextSecondary = lipgloss.Color("#B0B0C8")
-	TextMuted     = lipgloss.Color("#707090")
-	TextDim       = lipgloss.Color("#404060")
+	TextStyle      = lipgloss.NewStyle().Foreground(TextColor)
+	TextDimStyle   = lipgloss.NewStyle().Foreground(TextDimColor)
+	TextMutedStyle = lipgloss.NewStyle().Foreground(TextMutedColor)
 
-	AccentSky     = lipgloss.Color("#6C63FF")
-	AccentIndigo  = lipgloss.Color("#818CF8")
-	AccentEmerald = lipgloss.Color("#10B981")
-	AccentAmber   = lipgloss.Color("#F59E0B")
-	AccentRose    = lipgloss.Color("#EF4444")
-)
+	TitleStyle    = lipgloss.NewStyle().Foreground(White).Bold(true)
+	SubtitleStyle = lipgloss.NewStyle().Foreground(TextDimColor)
 
-var (
-	TextStyle     = lipgloss.NewStyle().Foreground(TextPrimary)
-	TextStyleDim  = lipgloss.NewStyle().Foreground(TextSecondary)
-	MutedStyle    = lipgloss.NewStyle().Foreground(TextMuted)
-	MutedStyleDim = lipgloss.NewStyle().Foreground(TextDim)
+	// Small-caps-style section labels used instead of card headers.
+	EyebrowStyle = lipgloss.NewStyle().Foreground(TextMutedColor).Bold(true)
 
-	TitleStyle      = lipgloss.NewStyle().Foreground(TextPrimary).Bold(true)
-	LogoStyle       = lipgloss.NewStyle().Foreground(AccentSky).Bold(true)
-	AccentTextStyle = lipgloss.NewStyle().Foreground(AccentSky).Bold(true)
+	LogoStyle   = lipgloss.NewStyle().Foreground(Violet).Bold(true)
+	AccentStyle = lipgloss.NewStyle().Foreground(Violet).Bold(true)
 
-	StatLabelStyle = lipgloss.NewStyle().Foreground(TextMuted)
-	StatValueStyle = lipgloss.NewStyle().Foreground(AccentSky).Bold(true)
+	StatLabelStyle = lipgloss.NewStyle().Foreground(TextMutedColor)
+	StatValueStyle = lipgloss.NewStyle().Foreground(White).Bold(true)
 
-	DividerStyle = lipgloss.NewStyle().Foreground(TextDim)
-)
+	StatusPlayingStyle = lipgloss.NewStyle().Foreground(Violet).Bold(true)
+	StatusPausedStyle  = lipgloss.NewStyle().Foreground(Amber).Bold(true)
+	StatusErrorStyle   = lipgloss.NewStyle().Foreground(Red).Bold(true)
+	StatusIdleStyle    = lipgloss.NewStyle().Foreground(TextMutedColor)
 
-var (
+	ProgressBarStyle   = lipgloss.NewStyle().Foreground(Violet)
+	ProgressTrackStyle = lipgloss.NewStyle().Foreground(LavenderMuted)
+
+	// Search is an underline, not a boxed input.
 	SearchInputStyle = lipgloss.NewStyle().
-				Foreground(TextPrimary).
+				Foreground(TextColor)
+
+	SearchInputFocusedStyle = lipgloss.NewStyle().
+				Foreground(White)
+
+	SearchPlaceholderStyle = lipgloss.NewStyle().Foreground(TextMutedColor)
+
+	// Line-level wrapper (adds consistent left/right margin to a result row).
+	RowStyle = lipgloss.NewStyle().
+			Padding(0, 1)
+
+	// Selection is shown with a violet left rail + bright text, never a
+	// full-width filled pill.
+	RowSelectedStyle = lipgloss.NewStyle().
 				Padding(0, 1)
 
-	SearchInputFocusedStyle = SearchInputStyle.
-				Foreground(TextPrimary)
-)
-
-var (
-	StatusTextPlaying = lipgloss.NewStyle().Foreground(AccentEmerald).Bold(true)
-	StatusTextPaused  = lipgloss.NewStyle().Foreground(AccentAmber).Bold(true)
-	StatusTextError   = lipgloss.NewStyle().Foreground(AccentRose).Bold(true)
-	StatusTextIdle    = lipgloss.NewStyle().Foreground(TextMuted)
-
-	ProgressBarStyle = lipgloss.NewStyle().Foreground(AccentSky)
-)
-
-var (
-	RowStyle = lipgloss.NewStyle().
-			Foreground(TextSecondary)
-
-	RowSelectedStyle = lipgloss.NewStyle().
-				Foreground(TextPrimary).
-				Bold(true)
+	// Inline text colors (no padding — used on title/artist segments).
+	RowTitleStyle          = lipgloss.NewStyle().Foreground(TextDimColor)
+	RowTitleSelectedStyle  = lipgloss.NewStyle().Foreground(White).Bold(true)
+	RowArtistStyle         = lipgloss.NewStyle().Foreground(TextMutedColor)
+	RowArtistSelectedStyle = lipgloss.NewStyle().Foreground(Violet)
 
 	KeyHintKeyStyle = lipgloss.NewStyle().
-			Foreground(AccentSky).
+			Foreground(Violet).
 			Bold(true)
 
 	KeyHintTextStyle = lipgloss.NewStyle().
-				Foreground(TextMuted)
+				Foreground(TextMutedColor)
+
+	DividerStyle = lipgloss.NewStyle().Foreground(LavenderMuted)
+
+	MutedStyle = lipgloss.NewStyle().Foreground(TextDimColor)
+
+	HeaderStyle = lipgloss.NewStyle().
+			Foreground(White)
+
+	NowPlayingTitleStyle  = lipgloss.NewStyle().Foreground(White).Bold(true)
+	NowPlayingArtistStyle = lipgloss.NewStyle().Foreground(TextDimColor)
+
+	// Rail markers used in place of bordered boxes / arrows.
+	RailStyle     = lipgloss.NewStyle().Foreground(Violet).Bold(true)
+	RailDimStyle  = lipgloss.NewStyle().Foreground(LavenderMuted)
 )
 
-const (
-	IconPlay      = "▶"
-	IconPause     = "⏸"
-	IconStop      = "⏹"
-	IconNext      = "⏭"
-	IconPrev      = "⏮"
-	IconSearch    = "⌕"
-	IconMusic     = "♫"
-	IconNote      = "♪"
-	IconStar      = "★"
-	IconBullet    = "●"
-	IconArrow     = "▸"
-	IconDiamond   = "✦"
-	IconCheck     = "✓"
-	IconCross     = "✗"
-	IconHeart     = "♥"
-	IconSpeaker   = "♩"
-	IconHeadphone = ""
-	IconFolder    = ""
-	IconFile      = ""
-	IconGit       = ""
-	IconTwitter   = ""
-	IconGear      = ""
-	IconHome      = ""
-	IconUser      = ""
-	IconClock     = ""
-	IconCalendar  = ""
-	IconList      = ""
-	IconMenu      = ""
-	IconSettings  = ""
-)
-
-// Styles avec icônes intégrées
-var (
-	PlayIconStyle = lipgloss.NewStyle().
-			Foreground(AccentEmerald).
-			Bold(true).
-			Render(IconPlay)
-
-	PauseIconStyle = lipgloss.NewStyle().
-			Foreground(AccentAmber).
-			Bold(true).
-			Render(IconPause)
-
-	StopIconStyle = lipgloss.NewStyle().
-			Foreground(TextMuted).
-			Render(IconStop)
-
-	SearchIconStyle = lipgloss.NewStyle().
-			Foreground(AccentSky).
-			Render(IconSearch)
-
-	MusicIconStyle = lipgloss.NewStyle().
-			Foreground(AccentIndigo).
-			Render(IconMusic)
-
-	ArrowIconStyle = lipgloss.NewStyle().
-			Foreground(TextDim).
-			Render(IconArrow)
-
-	DiamondIconStyle = lipgloss.NewStyle().
-				Foreground(AccentSky).
-				Render(IconDiamond)
-
-	BulletIconStyle = lipgloss.NewStyle().
-			Foreground(TextDim).
-			Render(IconBullet)
-
-	HeartIconStyle = lipgloss.NewStyle().
-			Foreground(AccentRose).
-			Render(IconHeart)
-
-	SpeakerIconStyle = lipgloss.NewStyle().
-				Foreground(AccentIndigo).
-				Render(IconSpeaker)
-
-	NoteIconStyle = lipgloss.NewStyle().
-			Foreground(AccentSky).
-			Render(IconNote)
-
-	StarIconStyle = lipgloss.NewStyle().
-			Foreground(AccentAmber).
-			Render(IconStar)
-
-	CheckIconStyle = lipgloss.NewStyle().
-			Foreground(AccentEmerald).
-			Render(IconCheck)
-
-	CrossIconStyle = lipgloss.NewStyle().
-			Foreground(AccentRose).
-			Render(IconCross)
-)
-
-func GetPlayIcon(playing bool) string {
-	if playing {
-		return PlayIconStyle
+// Divider renders a full-width hairline rule in place of a bordered box.
+func Divider(width int) string {
+	if width < 1 {
+		width = 1
 	}
-	return PauseIconStyle
+	line := repeat(CharRule, width)
+	return DividerStyle.Render(line)
 }
 
-func GetStatusIcon(state string) string {
-	switch state {
-	case "playing":
-		return PlayIconStyle
-	case "paused":
-		return PauseIconStyle
-	case "error":
-		return CrossIconStyle
-	default:
-		return BulletIconStyle
-	}
+// DividerDot renders the small inline "•" separator used between inline
+// stats (kept short and unobtrusive, not a rule).
+func DividerDot() string {
+	return TextMutedStyle.Render(" · ")
 }
 
-func GetSearchIcon(focused bool) string {
-	if focused {
-		return SearchIconStyle
+func repeat(s string, n int) string {
+	if n <= 0 {
+		return ""
 	}
-	return SearchIconStyle
-}
-
-func GetArrowIcon(selected bool) string {
-	if selected {
-		return ArrowIconStyle
+	out := make([]byte, 0, len(s)*n)
+	for i := 0; i < n; i++ {
+		out = append(out, s...)
 	}
-	return ArrowIconStyle
+	return string(out)
 }
-
-const (
-	CharProgress = "━"
-	CharTrack    = "─"
-	CharDot      = "●"
-)
-
-const (
-	BorderTop    = "─"
-	BorderBottom = "─"
-	BorderLeft   = "│"
-	BorderRight  = "│"
-	CornerTL     = "┌"
-	CornerTR     = "┐"
-	CornerBL     = "└"
-	CornerBR     = "┘"
-	LineH        = "─"
-	LineV        = "│"
-	LineCross    = "┼"
-)
-
-var (
-	ConfirmStyle = lipgloss.NewStyle().
-		Padding(1, 2).
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(AccentSky).
-		Foreground(TextPrimary)
-)
