@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -49,29 +48,30 @@ type Model struct {
 	currentTrack  *ytdlp.Track
 	isPlaying     bool
 	statusMsg     string
+	statusKind    string
 	width         int
 	height        int
 
-	totalMinutes   int
-	currentMinutes float64
-	startTime      time.Time
-	elapsedTime    time.Duration
-	scrobbles      int
+	totalMinutes int
+	elapsedTime  time.Duration
+	scrobbles    int
+	tickCount    int
 }
 
 func NewModel(engine *player.Engine) Model {
 	ti := textinput.New()
-	ti.Placeholder = "Rechercher un morceau ou un artiste..."
+	ti.Placeholder = "search for a song..."
 	ti.CharLimit = 156
-	ti.Width = 50
-	ti.Prompt = "> "
-	ti.TextStyle = lipgloss.NewStyle().Foreground(TextColor)
+	ti.Prompt = ""
+	ti.TextStyle = lipgloss.NewStyle().Foreground(TextPrimary)
+	ti.PlaceholderStyle = lipgloss.NewStyle().Foreground(TextDim)
 
 	return Model{
 		engine:       engine,
 		cache:        ytdlp.NewURLCache(5 * time.Minute),
 		searchInput:  ti,
-		statusMsg:    "Ready to play • Press '/' to search",
+		statusMsg:    "ready",
+		statusKind:   "idle",
 		width:        80,
 		height:       24,
 		isPlaying:    false,
@@ -133,24 +133,38 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tickMsg:
+		m.tickCount++
 		if m.isPlaying && m.currentTrack != nil {
 			m.elapsedTime += time.Second
-			m.currentMinutes = m.elapsedTime.Minutes()
 
 			if int(m.elapsedTime.Seconds())%10 == 0 {
 				m.scrobbles++
+			}
+
+			if m.elapsedTime.Seconds() >= m.currentTrack.Duration {
+				m.isPlaying = false
+				m.statusMsg = "finished"
+				m.statusKind = "idle"
+				m.elapsedTime = time.Duration(m.currentTrack.Duration) * time.Second
 			}
 		}
 		return m, tickCmd()
 
 	case searchResultsMsg:
 		if msg.err != nil {
-			m.statusMsg = fmt.Sprintf("Error: %v", msg.err)
+			m.statusMsg = fmt.Sprintf("error: %v", msg.err)
+			m.statusKind = "error"
 			return m, nil
 		}
 		m.searchResults = msg.tracks
 		m.cursor = 0
-		m.statusMsg = fmt.Sprintf("%d results found", len(msg.tracks))
+		if len(msg.tracks) > 0 {
+			m.statusMsg = fmt.Sprintf("%d results", len(msg.tracks))
+			m.statusKind = "idle"
+		} else {
+			m.statusMsg = "no results"
+			m.statusKind = "idle"
+		}
 
 		prefetchCount := 3
 		if len(msg.tracks) < prefetchCount {
@@ -177,20 +191,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.err != nil {
 			errMsg := msg.err.Error()
 			if strings.Contains(errMsg, "Sign in to confirm") || strings.Contains(errMsg, "bot") {
-				m.statusMsg = "YouTube bot detection. Please run: yt-dlp --cookies-from-browser firefox --cookies cookies.txt"
+				m.statusMsg = "bot detection - export cookies"
 			} else if strings.Contains(errMsg, "429") {
-				m.statusMsg = "Too many requests. Please wait a few minutes and try again."
+				m.statusMsg = "too many requests, wait..."
 			} else {
-				m.statusMsg = fmt.Sprintf("Error: %v", msg.err)
+				m.statusMsg = fmt.Sprintf("error: %v", msg.err)
 			}
+			m.statusKind = "error"
 			m.isPlaying = false
 		} else {
 			m.isPlaying = true
 			m.currentTrack = &msg.track
-			m.startTime = time.Now()
 			m.elapsedTime = 0
 			m.totalMinutes += int(msg.track.Duration / 60)
-			m.statusMsg = fmt.Sprintf("Playing: %s", msg.track.Title)
+			m.statusMsg = "playing"
+			m.statusKind = "playing"
 		}
 		return m, nil
 	}
@@ -203,20 +218,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.isSearching = false
 				m.searchInput.Blur()
 				if query == "" {
-					m.statusMsg = "Search cancelled."
+					m.statusMsg = "search cancelled"
+					m.statusKind = "idle"
 					return m, nil
 				}
 				if len(m.searchResults) > 0 {
-					m.statusMsg = fmt.Sprintf("%d results found", len(m.searchResults))
+					m.statusMsg = fmt.Sprintf("%d results", len(m.searchResults))
+					m.statusKind = "idle"
 					return m, nil
 				}
-				m.statusMsg = "Searching with yt-dlp..."
+				m.statusMsg = "searching..."
+				m.statusKind = "idle"
 				return m, performSearch(query)
 
 			case "esc":
 				m.isSearching = false
 				m.searchInput.Blur()
-				m.statusMsg = "Search cancelled."
+				m.statusMsg = "search cancelled"
+				m.statusKind = "idle"
 				return m, nil
 			}
 		}
@@ -229,7 +248,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			query := strings.TrimSpace(m.searchInput.Value())
 			if len(query) >= 2 {
 				m.searchGen++
-				m.statusMsg = "Searching with yt-dlp..."
+				m.statusMsg = "searching..."
+				m.statusKind = "idle"
 				return m, tea.Batch(updateCmd, debounceSearch(m.searchGen, query))
 			}
 		}
@@ -249,45 +269,53 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.isSearching = true
 			m.searchInput.Focus()
 			m.searchInput.SetValue("")
-			m.statusMsg = "Search: type your query"
+			m.statusMsg = "search..."
+			m.statusKind = "idle"
 			return m, nil
 
 		case "j", "down":
 			if m.cursor < len(m.searchResults)-1 {
 				m.cursor++
+				if len(m.searchResults) > 0 {
+					m.selectionGen++
+					return m, debouncePrefetch(m.selectionGen, m.searchResults[m.cursor].ID)
+				}
 			}
-			if len(m.searchResults) > 0 {
-				m.selectionGen++
-				return m, debouncePrefetch(m.selectionGen, m.searchResults[m.cursor].ID)
-			}
-			return m, nil
 
 		case "k", "up":
 			if m.cursor > 0 {
 				m.cursor--
+				if len(m.searchResults) > 0 {
+					m.selectionGen++
+					return m, debouncePrefetch(m.selectionGen, m.searchResults[m.cursor].ID)
+				}
 			}
-			if len(m.searchResults) > 0 {
-				m.selectionGen++
-				return m, debouncePrefetch(m.selectionGen, m.searchResults[m.cursor].ID)
-			}
-			return m, nil
 
 		case " ":
 			if m.engine != nil && m.currentTrack != nil {
+				if m.elapsedTime.Seconds() >= m.currentTrack.Duration {
+					m.isPlaying = false
+					m.statusMsg = "finished"
+					m.statusKind = "idle"
+					return m, nil
+				}
 				err := m.engine.TogglePause()
 				if err != nil {
-					m.statusMsg = fmt.Sprintf("Error: %v", err)
+					m.statusMsg = fmt.Sprintf("error: %v", err)
+					m.statusKind = "error"
 				} else {
 					m.isPlaying = !m.isPlaying
 					if m.isPlaying {
-						m.startTime = time.Now().Add(-m.elapsedTime)
-						m.statusMsg = "Playing"
+						m.statusMsg = "playing"
+						m.statusKind = "playing"
 					} else {
-						m.statusMsg = "Paused"
+						m.statusMsg = "paused"
+						m.statusKind = "paused"
 					}
 				}
 			} else {
-				m.statusMsg = "No track playing"
+				m.statusMsg = "no track loaded"
+				m.statusKind = "idle"
 			}
 			return m, nil
 
@@ -295,10 +323,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if len(m.searchResults) > 0 && m.cursor < len(m.searchResults) {
 				selected := m.searchResults[m.cursor]
 				m.currentTrack = &selected
-				m.statusMsg = fmt.Sprintf("Loading: %s...", selected.Title)
+				m.elapsedTime = 0
+				m.statusMsg = fmt.Sprintf("loading: %s", selected.Title)
+				m.statusKind = "idle"
 				return m, fetchTrack(m.engine, m.cache, selected)
 			}
-			return m, nil
 		}
 	}
 
@@ -306,163 +335,251 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
-	mainWidth := m.width - 35
-	if mainWidth < 20 {
-		mainWidth = 20
-	}
-	playerWidth := m.width - 4
-	if playerWidth < 20 {
-		playerWidth = 20
+	if m.width == 0 {
+		m.width = 80
 	}
 
-	header := HeaderStyle.Width(m.width - 4).Render(
-		fmt.Sprintf("Nelo TunePipe %s %s SCROBBLES: %s %s",
-			Divider(),
-			CounterStyle.Render(formatDuration(m.totalMinutes)),
-			Divider(),
-			CounterStyle.Render(formatScrobbles(m.scrobbles)),
-		),
+	width := m.width - 2
+	if width < 40 {
+		width = 40
+	}
+
+	header := renderHeader(m, width)
+	nowPlaying := renderNowPlaying(m, width)
+	search := renderSearch(m, width)
+	results := renderResults(m, width)
+	progress := renderProgress(m, width)
+	controls := renderControls(m, width)
+	footer := renderFooter(m, width)
+
+	body := lipgloss.JoinVertical(
+		lipgloss.Left,
+		header,
+		"",
+		nowPlaying,
+		"",
+		search,
+		"",
+		results,
+		"",
+		progress,
+		"",
+		controls,
+		"",
+		footer,
 	)
 
-	var searchContent string
-	if m.isSearching {
-		searchBox := SearchInputStyle.Width(mainWidth - 4).Render(m.searchInput.View())
-		searchContent = SearchModeStyle.Render("SEARCH") + "\n\n" + searchBox
-		searchContent += "\n\n" + MutedStyle.Render("Enter to confirm • Esc to cancel")
-		if len(m.searchResults) > 0 {
-			searchContent += "\n\n" + renderResultsList(m)
-		}
-	} else if len(m.searchResults) == 0 {
-		searchContent = MutedStyle.Render("Press '/' to search for music")
-	} else {
-		searchContent = renderResultsList(m)
-	}
-
-	mainPane := MainPaneStyle.
-		Width(mainWidth).
-		Height(10).
-		Render("MUSIC\n\n" + searchContent)
-
-	sidePane := SidebarStyle.
-		Width(30).
-		Height(10).
-		Render(
-			"CONTROLS\n\n" +
-				"[/] Search\n" +
-				"[j/k] Navigate\n" +
-				"[Enter] Play\n" +
-				"[Space] Pause\n" +
-				"[q] Quit\n\n" +
-				TagStyle.Render("#tunepipe") + " " +
-				TagStyle.Render("#music"),
-		)
-
-	topRow := lipgloss.JoinHorizontal(lipgloss.Top, mainPane, sidePane)
-
-	nowPlaying := "No track playing"
-	elapsedStr := ""
-	if m.currentTrack != nil {
-		if m.isPlaying {
-			elapsedStr = fmt.Sprintf("%02d:%02d / %02d:%02d",
-				int(m.elapsedTime.Minutes()),
-				int(m.elapsedTime.Seconds())%60,
-				int(m.currentTrack.Duration/60),
-				int(m.currentTrack.Duration)%60,
-			)
-		} else {
-			elapsedStr = fmt.Sprintf("%02d:%02d / %02d:%02d  [PAUSED]",
-				int(m.elapsedTime.Minutes()),
-				int(m.elapsedTime.Seconds())%60,
-				int(m.currentTrack.Duration/60),
-				int(m.currentTrack.Duration)%60,
-			)
-		}
-		nowPlaying = fmt.Sprintf("%s %s %s",
-			TitleStyle.Render(m.currentTrack.Title),
-			MutedStyle.Render("•"),
-			MutedStyle.Render(m.currentTrack.Uploader),
-		)
-	}
-
-	statusStyle := StatusPausedStyle
-	if m.isPlaying {
-		statusStyle = StatusPlayingStyle
-	} else if strings.Contains(m.statusMsg, "bot") || strings.Contains(m.statusMsg, "429") {
-		statusStyle = StatusErrorStyle
-	}
-
-	progress := ""
-	if m.currentTrack != nil && m.currentTrack.Duration > 0 {
-		pct := int((m.elapsedTime.Seconds() / m.currentTrack.Duration) * 20)
-		if pct > 20 {
-			pct = 20
-		}
-		bar := strings.Repeat("█", pct) + strings.Repeat("░", 20-pct)
-		progress = ProgressBarStyle.Render(bar)
-	}
-
-	playerBar := PlayerBarStyle.
-		Width(playerWidth).
-		Render(
-			fmt.Sprintf("%s\n%s %s\n%s",
-				statusStyle.Render(nowPlaying),
-				CounterStyle.Render(elapsedStr),
-				Divider(),
-				progress,
-			) +
-				"\n" + MutedStyle.Render(m.statusMsg),
-		)
-
-	return lipgloss.JoinVertical(lipgloss.Left, header, topRow, playerBar)
+	return body
 }
 
-func renderResultsList(m Model) string {
-	var content string
-	for i, track := range m.searchResults {
-		cursorStr := " "
-		item := fmt.Sprintf("%2d. %s %s %s",
-			i+1,
-			TitleStyle.Render(truncate(track.Title, 30)),
-			MutedStyle.Render("•"),
-			MutedStyle.Render(truncate(track.Uploader, 20)),
-		)
-		if m.cursor == i {
-			cursorStr = ">"
-			itemStr := fmt.Sprintf("%s %s", cursorStr, item)
-			content += SelectedItemStyle.Render(itemStr) + "\n"
-		} else {
-			itemStr := fmt.Sprintf("%s %s", cursorStr, item)
-			content += NormalItemStyle.Render(itemStr) + "\n"
+func renderHeader(m Model, width int) string {
+	logo := LogoStyle.Render("✦ tunepipe")
+
+	stats := fmt.Sprintf("%s %dh  %s %d",
+		StatLabelStyle.Render("listened"),
+		m.totalMinutes/60,
+		StatLabelStyle.Render("scrobbles"),
+		m.scrobbles,
+	)
+
+	gap := width - lipgloss.Width(logo) - lipgloss.Width(stats) - 2
+	if gap < 1 {
+		gap = 1
+	}
+
+	return fmt.Sprintf("%s%s%s", logo, strings.Repeat(" ", gap), stats)
+}
+
+func renderNowPlaying(m Model, width int) string {
+	if m.currentTrack == nil {
+		return MutedStyleDim.Render("┄ nothing playing ┄")
+	}
+
+	var status string
+	var style lipgloss.Style
+	if m.isPlaying {
+		status = "▶"
+		style = StatusTextPlaying
+	} else if m.elapsedTime.Seconds() >= m.currentTrack.Duration {
+		status = "■"
+		style = StatusTextIdle
+	} else {
+		status = "⏸"
+		style = StatusTextPaused
+	}
+
+	title := TitleStyle.Render(truncate(m.currentTrack.Title, width-20))
+	artist := MutedStyle.Render(truncate(m.currentTrack.Uploader, width-20))
+
+	return fmt.Sprintf("%s %s %s %s",
+		style.Render(status),
+		DividerStyle.Render("▸"),
+		title,
+		MutedStyleDim.Render("by "+artist),
+	)
+}
+
+func renderSearch(m Model, width int) string {
+	if m.isSearching {
+		return SearchInputFocusedStyle.Width(width).Render(m.searchInput.View())
+	}
+
+	if len(m.searchResults) > 0 {
+		return MutedStyleDim.Render(fmt.Sprintf("✦ %d results • press / to search", len(m.searchResults)))
+	}
+
+	return MutedStyleDim.Render("✦ press / to search")
+}
+
+func renderResults(m Model, width int) string {
+	if len(m.searchResults) == 0 {
+		return ""
+	}
+
+	var lines []string
+	maxItems := 8
+
+	for i := 0; i < len(m.searchResults) && i < maxItems; i++ {
+		track := m.searchResults[i]
+		line := renderResultLine(track, i, i == m.cursor, width)
+		lines = append(lines, line)
+	}
+
+	return strings.Join(lines, "\n")
+}
+
+func renderResultLine(track ytdlp.Track, index int, selected bool, width int) string {
+	num := fmt.Sprintf("%2d.", index+1)
+	title := truncate(track.Title, width-30)
+	artist := truncate(track.Uploader, 20)
+
+	if selected {
+		return RowSelectedStyle.Render(fmt.Sprintf("❯ %s %s  %s", num, title, artist))
+	}
+	return RowStyle.Render(fmt.Sprintf("  %s %s  %s", num, title, artist))
+}
+
+func renderProgress(m Model, width int) string {
+	if m.currentTrack == nil || m.currentTrack.Duration <= 0 {
+		return ""
+	}
+
+	barWidth := width - 16
+	if barWidth < 10 {
+		barWidth = 10
+	}
+
+	var pct float64
+	if m.elapsedTime.Seconds() >= m.currentTrack.Duration {
+		pct = 1.0
+	} else if m.currentTrack.Duration > 0 {
+		pct = m.elapsedTime.Seconds() / m.currentTrack.Duration
+		if pct > 1 {
+			pct = 1
+		}
+		if pct < 0 {
+			pct = 0
 		}
 	}
-	return content
+
+	filled := int(pct * float64(barWidth))
+	if filled > barWidth {
+		filled = barWidth
+	}
+	if filled < 0 {
+		filled = 0
+	}
+
+	elapsed := fmt.Sprintf("%02d:%02d", int(m.elapsedTime.Minutes()), int(m.elapsedTime.Seconds())%60)
+	total := fmt.Sprintf("%02d:%02d", int(m.currentTrack.Duration/60), int(m.currentTrack.Duration)%60)
+
+	isFinished := m.elapsedTime.Seconds() >= m.currentTrack.Duration
+
+	var bar string
+	if isFinished {
+		bar = MutedStyleDim.Render(strings.Repeat("━", barWidth))
+	} else if filled <= 0 {
+		bar = MutedStyleDim.Render(strings.Repeat("─", barWidth))
+	} else if filled >= barWidth {
+		bar = ProgressBarStyle.Render(strings.Repeat("━", barWidth))
+	} else {
+		bar = ProgressBarStyle.Render(strings.Repeat("━", filled)) +
+			MutedStyleDim.Render(strings.Repeat("─", barWidth-filled))
+	}
+
+	if isFinished {
+		return fmt.Sprintf("%s %s %s", MutedStyleDim.Render(elapsed), MutedStyleDim.Render(bar), MutedStyleDim.Render(total))
+	}
+
+	return fmt.Sprintf("%s %s %s", MutedStyle.Render(elapsed), bar, MutedStyle.Render(total))
+}
+
+func renderControls(m Model, width int) string {
+	var _ []string
+
+	keys := []struct {
+		key   string
+		label string
+	}{
+		{"space", "play/pause"},
+		{"/", "search"},
+		{"j/k", "navigate"},
+		{"enter", "select"},
+		{"q", "quit"},
+	}
+
+	var parts []string
+	for _, k := range keys {
+		parts = append(parts, fmt.Sprintf("%s %s",
+			KeyHintKeyStyle.Render(k.key),
+			KeyHintTextStyle.Render(k.label),
+		))
+	}
+
+	line := strings.Join(parts, "  •  ")
+	return MutedStyleDim.Render(line)
+}
+
+func renderFooter(m Model, width int) string {
+	status := m.statusMsg
+	if status == "" {
+		status = "ready"
+	}
+
+	var style lipgloss.Style
+	switch m.statusKind {
+	case "playing":
+		style = StatusTextPlaying
+	case "paused":
+		style = StatusTextPaused
+	case "error":
+		style = StatusTextError
+	default:
+		style = StatusTextIdle
+	}
+
+	statusText := style.Render("● " + status)
+
+	keys := MutedStyleDim.Render("space · / · j/k · enter · q")
+
+	gap := width - lipgloss.Width(statusText) - lipgloss.Width(keys) - 2
+	if gap < 1 {
+		gap = 1
+	}
+
+	return fmt.Sprintf("%s%s%s", statusText, strings.Repeat(" ", gap), keys)
 }
 
 func truncate(s string, maxLen int) string {
-	if len(s) <= maxLen {
+	if maxLen < 1 {
+		return ""
+	}
+	runes := []rune(s)
+	if len(runes) <= maxLen {
 		return s
 	}
 	if maxLen < 3 {
-		return s[:maxLen]
+		return string(runes[:maxLen])
 	}
-	return s[:maxLen-3] + "..."
-}
-
-func formatDuration(minutes int) string {
-	hours := minutes / 60
-	mins := minutes % 60
-	if hours > 0 {
-		return fmt.Sprintf("%dh %dm", hours, mins)
-	}
-	return fmt.Sprintf("%dm", mins)
-}
-
-func formatScrobbles(scrobbles int) string {
-	if scrobbles >= 1000000 {
-		return fmt.Sprintf("%.1fM", float64(scrobbles)/1000000)
-	}
-	if scrobbles >= 1000 {
-		return fmt.Sprintf("%.1fK", float64(scrobbles)/1000)
-	}
-	return strconv.Itoa(scrobbles)
+	return string(runes[:maxLen-3]) + "…"
 }
