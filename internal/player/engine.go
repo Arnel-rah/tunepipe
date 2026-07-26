@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"sync"
 	"time"
 
 	"tunepipe/internal/ipc"
@@ -14,6 +15,7 @@ type Engine struct {
 	cmd       *exec.Cmd
 	ipcClient *ipc.Client
 	pipeName  string
+	mu        sync.Mutex
 }
 
 func getMPVBinary() string {
@@ -36,6 +38,8 @@ func NewEngine(pipeName string) (*Engine, error) {
 	cmd := exec.Command(binary,
 		"--idle",
 		"--no-video",
+		"--no-terminal",
+		"--really-quiet",
 		fmt.Sprintf("--input-ipc-server=%s", pipePath),
 	)
 
@@ -67,24 +71,84 @@ func NewEngine(pipeName string) (*Engine, error) {
 }
 
 func (e *Engine) PlayURL(url string) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	if e.ipcClient == nil {
+		return fmt.Errorf("ipc client not connected")
+	}
+
+	if err := e.ipcClient.SendExec("stop"); err != nil {
+		return err
+	}
+
 	if err := e.ipcClient.SendExec("loadfile", url, "replace"); err != nil {
 		return err
 	}
-	
-	return e.ipcClient.SendExec("set_property", "pause", false)
+
+	time.Sleep(200 * time.Millisecond)
+
+	for i := 0; i < 3; i++ {
+		if err := e.ipcClient.SendExec("set", "pause", "no"); err == nil {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
 }
 
 func (e *Engine) TogglePause() error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	if e.ipcClient == nil {
+		return fmt.Errorf("ipc client not connected")
+	}
+
 	return e.ipcClient.SendExec("cycle", "pause")
 }
 
+func (e *Engine) Pause() error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	if e.ipcClient == nil {
+		return fmt.Errorf("ipc client not connected")
+	}
+
+	return e.ipcClient.SendExec("set", "pause", "yes")
+}
+
+func (e *Engine) Resume() error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	if e.ipcClient == nil {
+		return fmt.Errorf("ipc client not connected")
+	}
+
+	for i := 0; i < 3; i++ {
+		if err := e.ipcClient.SendExec("set", "pause", "no"); err == nil {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	return nil
+}
+
 func (e *Engine) Stop() {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	if e == nil {
 		return
 	}
 	if e.ipcClient != nil {
 		_ = e.ipcClient.SendExec("quit")
 		_ = e.ipcClient.Close()
+		e.ipcClient = nil
 	}
 	if e.cmd != nil && e.cmd.Process != nil {
 		_ = e.cmd.Process.Kill()

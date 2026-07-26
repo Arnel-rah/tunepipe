@@ -15,19 +15,28 @@ func renderFooter(m Model, width int) string {
 
 	var style lipgloss.Style
 	var icon string
-	switch m.statusKind {
-	case "playing":
+
+	if m.isLoading {
+		style = StatusLoadingStyle
+		icon = IconLoading
+		status = "loading..."
+	} else if m.isPlaying {
 		style = StatusPlayingStyle
 		icon = IconPlay
-	case "paused":
-		style = StatusPausedStyle
-		icon = IconPause
-	case "error":
+		status = "playing"
+	} else if m.statusKind == "error" {
 		style = StatusErrorStyle
 		icon = IconCross
-	default:
+	} else if m.currentTrack != nil && m.elapsedTime.Seconds() >= m.currentTrack.Duration {
+		style = StatusIdleStyle
+		icon = IconStop
+		status = "finished"
+	} else {
 		style = StatusIdleStyle
 		icon = IconBullet
+		if status == "" {
+			status = "ready"
+		}
 	}
 
 	statusText := style.Render(icon + " " + strings.ToUpper(status))
@@ -51,13 +60,12 @@ func renderFooter(m Model, width int) string {
 		))
 	}
 
-	keysText := strings.Join(parts, "   ")
+	keysText := strings.Join(parts, "  ")
 
-	gap := width - lipgloss.Width(statusText) - lipgloss.Width(keysText)
+	gap := width - lipgloss.Width(statusText) - lipgloss.Width(keysText) - 2
 	if gap < 1 {
 		gap = 1
 	}
 
-	content := fmt.Sprintf("%s%s%s", statusText, strings.Repeat(" ", gap), keysText)
-	return content
+	return fmt.Sprintf("%s%s%s", statusText, strings.Repeat(" ", gap), keysText)
 }
