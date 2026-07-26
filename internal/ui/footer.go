@@ -41,15 +41,32 @@ func renderFooter(m Model, width int) string {
 
 	statusText := style.Render(icon + " " + strings.ToUpper(status))
 
+	if width < 50 {
+		return statusText
+	}
+
 	keys := []struct {
 		key   string
 		label string
 	}{
-		{"SPACE", "Play/Pause"},
+		{"SPACE", "Play"},
 		{"/", "Search"},
-		{"↑↓", "Navigate"},
+		{"↑↓", "Move"},
 		{"ENTER", "Select"},
 		{"Q", "Quit"},
+	}
+
+	if width >= 80 {
+		keys = []struct {
+			key   string
+			label string
+		}{
+			{"SPACE", "Play/Pause"},
+			{"/", "Search"},
+			{"↑↓", "Navigate"},
+			{"ENTER", "Select"},
+			{"Q", "Quit"},
+		}
 	}
 
 	var parts []string
@@ -61,6 +78,10 @@ func renderFooter(m Model, width int) string {
 	}
 
 	keysText := strings.Join(parts, "  ")
+
+	if width < 70 && len(parts) > 3 {
+		keysText = strings.Join(parts[:3], "  ")
+	}
 
 	gap := width - lipgloss.Width(statusText) - lipgloss.Width(keysText) - 2
 	if gap < 1 {

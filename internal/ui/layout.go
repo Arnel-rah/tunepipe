@@ -12,7 +12,7 @@ func (m Model) View() string {
 		m.height = 24
 	}
 
-	width := m.width - 6
+	width := m.width - 4
 	if width < 40 {
 		width = 40
 	}
@@ -47,6 +47,6 @@ func (m Model) View() string {
 	body := lipgloss.JoinVertical(lipgloss.Left, rows...)
 
 	return lipgloss.NewStyle().
-		Padding(1, 3).
+		Padding(0, 1).
 		Render(body)
 }

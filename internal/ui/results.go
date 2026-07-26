@@ -13,9 +13,18 @@ func renderResults(m Model, width int) string {
 		return ""
 	}
 
-	lines := make([]string, 0, 8)
+	maxItems := 8
+	if m.height < 20 {
+		maxItems = 5
+	} else if m.height < 25 {
+		maxItems = 6
+	} else if m.height < 30 {
+		maxItems = 8
+	}
 
-	for i := 0; i < len(m.searchResults) && i < 8; i++ {
+	lines := make([]string, 0, maxItems)
+
+	for i := 0; i < len(m.searchResults) && i < maxItems; i++ {
 		lines = append(lines,
 			renderResultLine(
 				m.searchResults[i],
@@ -32,7 +41,7 @@ func renderResultLine(track ytdlp.Track, selected bool, width int) string {
 	const (
 		railWidth   = 2
 		gap         = 2
-		artistWidth = 22
+		artistWidth = 20
 	)
 
 	lineStyle := RowStyle
@@ -46,10 +55,16 @@ func renderResultLine(track ytdlp.Track, selected bool, width int) string {
 		rail = RailStyle.Render(IconRail) + " "
 	}
 
-	innerWidth := width - lineStyle.GetHorizontalFrameSize()
+	innerWidth := width - 2
 	titleWidth := innerWidth - railWidth - gap - artistWidth
-	if titleWidth < 10 {
-		titleWidth = 10
+	if titleWidth < 5 {
+		titleWidth = 5
+	}
+	if width < 50 {
+		titleWidth = width - 25
+		if titleWidth < 5 {
+			titleWidth = 5
+		}
 	}
 
 	title := truncate(track.Title, titleWidth)

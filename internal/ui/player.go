@@ -35,10 +35,18 @@ func renderPlayer(m Model, width int) string {
 	if maxLen < 10 {
 		maxLen = 10
 	}
+	if width < 50 {
+		maxLen = width - 8
+	}
 
 	eyebrow := statusStyle.Render(icon + " " + status)
 	title := NowPlayingTitleStyle.Render(truncate(m.currentTrack.Title, maxLen))
-	artist := NowPlayingArtistStyle.Render(truncate(m.currentTrack.Uploader, maxLen))
+
+	artistMaxLen := maxLen
+	if width < 50 {
+		artistMaxLen = maxLen - 8
+	}
+	artist := NowPlayingArtistStyle.Render(truncate(m.currentTrack.Uploader, artistMaxLen))
 
 	rail := RailStyle.Render(IconRail)
 	textBlock := lipgloss.JoinVertical(lipgloss.Left, eyebrow, title, artist)
