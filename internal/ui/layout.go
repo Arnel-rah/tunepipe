@@ -46,12 +46,7 @@ func (m Model) View() string {
 
 	body := lipgloss.JoinVertical(lipgloss.Left, rows...)
 
-	content := lipgloss.NewStyle().
+	return lipgloss.NewStyle().
 		Padding(1, 3).
 		Render(body)
-
-	return lipgloss.NewStyle().
-		Width(m.width).
-		Height(m.height).
-		Render(content)
 }

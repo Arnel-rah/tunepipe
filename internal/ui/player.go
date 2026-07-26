@@ -13,11 +13,15 @@ func renderPlayer(m Model, width int) string {
 	var statusStyle lipgloss.Style
 	var icon string
 
-	if m.isPlaying {
+	if m.isLoading {
+		status = "LOADING"
+		statusStyle = StatusLoadingStyle
+		icon = IconLoading
+	} else if m.isPlaying {
 		status = "PLAYING"
 		statusStyle = StatusPlayingStyle
 		icon = IconPlay
-	} else if m.elapsedTime.Seconds() >= m.currentTrack.Duration {
+	} else if m.elapsedTime.Seconds() >= m.currentTrack.Duration && m.currentTrack.Duration > 0 {
 		status = "FINISHED"
 		statusStyle = StatusIdleStyle
 		icon = IconStop

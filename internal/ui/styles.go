@@ -10,8 +10,6 @@ var (
 	TitleStyle    = lipgloss.NewStyle().Foreground(White).Bold(true)
 	SubtitleStyle = lipgloss.NewStyle().Foreground(TextDimColor)
 
-	EyebrowStyle = lipgloss.NewStyle().Foreground(TextMutedColor).Bold(true)
-
 	LogoStyle   = lipgloss.NewStyle().Foreground(Violet).Bold(true)
 	AccentStyle = lipgloss.NewStyle().Foreground(Violet).Bold(true)
 
@@ -22,6 +20,7 @@ var (
 	StatusPausedStyle  = lipgloss.NewStyle().Foreground(Amber).Bold(true)
 	StatusErrorStyle   = lipgloss.NewStyle().Foreground(Red).Bold(true)
 	StatusIdleStyle    = lipgloss.NewStyle().Foreground(TextMutedColor)
+	StatusLoadingStyle = lipgloss.NewStyle().Foreground(Violet).Bold(true)
 
 	ProgressBarStyle   = lipgloss.NewStyle().Foreground(Violet)
 	ProgressTrackStyle = lipgloss.NewStyle().Foreground(LavenderMuted)
@@ -32,7 +31,8 @@ var (
 	SearchInputFocusedStyle = lipgloss.NewStyle().
 				Foreground(White)
 
-	SearchPlaceholderStyle = lipgloss.NewStyle().Foreground(TextMutedColor)
+	SearchPlaceholderStyle = lipgloss.NewStyle().
+				Foreground(TextMutedColor)
 
 	RowStyle = lipgloss.NewStyle().
 			Padding(0, 1)
@@ -70,12 +70,28 @@ func Divider(width int) string {
 	if width < 1 {
 		width = 1
 	}
-	line := repeat(CharRule, width)
-	return DividerStyle.Render(line)
+	return DividerStyle.Render(repeat(CharRule, width))
 }
 
 func DividerDot() string {
-	return TextMutedStyle.Render(" · ")
+	return TextMutedStyle.Render(" " + IconBullet + " ")
+}
+
+func GetStatusIcon(status string) string {
+	switch status {
+	case "playing":
+		return PlayIconStyle
+	case "paused":
+		return PauseIconStyle
+	case "loading":
+		return LoadingIconStyle
+	case "finished":
+		return StopIconStyle
+	case "error":
+		return CrossIconStyle
+	default:
+		return BulletIconStyle
+	}
 }
 
 func repeat(s string, n int) string {

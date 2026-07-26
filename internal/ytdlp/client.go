@@ -29,7 +29,15 @@ func getCookiesOption() []string {
 		if _, err := os.Stat("cookies.txt"); err == nil {
 			return []string{"--cookies", "cookies.txt"}
 		}
-		return []string{"--cookies-from-browser", "firefox"}
+		browsers := []string{"firefox", "chrome", "edge", "brave"}
+		for _, b := range browsers {
+			check := exec.Command("yt-dlp", "--cookies-from-browser", b, "--cookies", "test.txt")
+			if err := check.Run(); err == nil {
+				os.Remove("test.txt")
+				return []string{"--cookies-from-browser", b}
+			}
+		}
+		return []string{}
 	}
 	return []string{"--cookies-from-browser", "firefox"}
 }
@@ -89,11 +97,16 @@ func tryFormats(binary, url string, baseArgs []string) (string, error) {
 	formatSelectors := []string{
 		"bestaudio[ext=m4a]",
 		"bestaudio[ext=webm]",
+		"bestaudio[ext=mp3]",
+		"bestaudio[ext=aac]",
+		"bestaudio[abr<=128]/bestaudio",
+		"bestaudio[abr<=192]/bestaudio",
 		"bestaudio",
 		"best",
 	}
 
 	var lastErr error
+	var lastOutput string
 
 	for _, selector := range formatSelectors {
 		args := append([]string{"-f", selector}, baseArgs...)
@@ -108,7 +121,8 @@ func tryFormats(binary, url string, baseArgs []string) (string, error) {
 
 		if err := cmd.Run(); err != nil {
 			errMsg := strings.TrimSpace(stderr.String())
-			if errMsg != "" && !strings.Contains(errMsg, "Requested format is not available") {
+			if errMsg != "" && !strings.Contains(errMsg, "Requested format is not available") &&
+				!strings.Contains(errMsg, "No video formats found") {
 				lastErr = fmt.Errorf("%s", errMsg)
 			}
 			continue
@@ -118,12 +132,19 @@ func tryFormats(binary, url string, baseArgs []string) (string, error) {
 		if directURL != "" && strings.HasPrefix(directURL, "http") {
 			return directURL, nil
 		}
+		if directURL != "" {
+			lastOutput = directURL
+		}
+	}
+
+	if lastOutput != "" {
+		return lastOutput, nil
 	}
 
 	if lastErr != nil {
 		return "", lastErr
 	}
-	return "", fmt.Errorf("aucun format audio disponible")
+	return "", fmt.Errorf("Tsisy format dispo")
 }
 
 func FetchDirectURL(videoID string) (string, error) {
@@ -137,15 +158,16 @@ func FetchDirectURL(videoID string) (string, error) {
 		"--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
 	}
 
-	if directURL, err := tryFormats(binary, url, baseArgs); err == nil {
+	directURL, err := tryFormats(binary, url, baseArgs)
+	if err == nil && directURL != "" {
 		return directURL, nil
 	}
 
 	withCookies := append(append([]string{}, baseArgs...), getCookiesOption()...)
-	directURL, err := tryFormats(binary, url, withCookies)
-	if err != nil {
-		return "", fmt.Errorf("aucun format audio disponible: %w", err)
+	directURL, err = tryFormats(binary, url, withCookies)
+	if err == nil && directURL != "" {
+		return directURL, nil
 	}
 
-	return directURL, nil
+	return "", fmt.Errorf("mbola tsisy format iany: %w", err)
 }

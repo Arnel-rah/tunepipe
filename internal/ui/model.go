@@ -47,6 +47,7 @@ type Model struct {
 	searchGen     int
 	currentTrack  *ytdlp.Track
 	isPlaying     bool
+	isLoading     bool
 	statusMsg     string
 	statusKind    string
 	width         int
@@ -77,6 +78,7 @@ func NewModel(engine *player.Engine) Model {
 		width:        80,
 		height:       24,
 		isPlaying:    false,
+		isLoading:    false,
 		totalMinutes: 0,
 		scrobbles:    0,
 		confirmQuit:  false,
@@ -128,6 +130,46 @@ func fetchTrack(engine *player.Engine, cache *ytdlp.URLCache, track ytdlp.Track)
 	}
 }
 
+func prefetchWindow(cache *ytdlp.URLCache, tracks []ytdlp.Track, centerIdx int) {
+	if cache == nil || len(tracks) == 0 {
+		return
+	}
+	const ahead = 3
+	const behind = 1
+	start := centerIdx - behind
+	if start < 0 {
+		start = 0
+	}
+	end := centerIdx + ahead
+	if end > len(tracks)-1 {
+		end = len(tracks) - 1
+	}
+	for i := start; i <= end; i++ {
+		cache.Prefetch(tracks[i].ID)
+	}
+}
+
+func playTrackAt(m Model, i int) (Model, tea.Cmd) {
+	if i < 0 || i >= len(m.searchResults) {
+		return m, nil
+	}
+	selected := m.searchResults[i]
+	m.cursor = i
+	m.currentTrack = &selected
+	m.elapsedTime = 0
+	m.isPlaying = false
+	m.isLoading = true
+	m.statusMsg = "loading..."
+	m.statusKind = "idle"
+
+	if m.isSearching {
+		m.isSearching = false
+		m.searchInput.Blur()
+	}
+
+	return m, fetchTrack(m.engine, m.cache, selected)
+}
+
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -137,7 +179,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tickMsg:
 		m.tickCount++
-		if m.isPlaying && m.currentTrack != nil {
+		if m.isPlaying && m.currentTrack != nil && !m.isLoading {
 			m.elapsedTime += time.Second
 
 			if int(m.elapsedTime.Seconds())%10 == 0 {
@@ -145,10 +187,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			if m.elapsedTime.Seconds() >= m.currentTrack.Duration {
+				m.elapsedTime = time.Duration(m.currentTrack.Duration) * time.Second
 				m.isPlaying = false
 				m.statusMsg = "finished"
 				m.statusKind = "idle"
-				m.elapsedTime = time.Duration(m.currentTrack.Duration) * time.Second
+
+				if m.cursor < len(m.searchResults)-1 {
+					nextTrack, cmd := playTrackAt(m, m.cursor+1)
+					return nextTrack, tea.Batch(tickCmd(), cmd)
+				}
 			}
 		}
 		return m, tickCmd()
@@ -169,13 +216,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.statusKind = "idle"
 		}
 
-		prefetchCount := 3
-		if len(msg.tracks) < prefetchCount {
-			prefetchCount = len(msg.tracks)
-		}
-		for i := 0; i < prefetchCount; i++ {
-			m.cache.Prefetch(msg.tracks[i].ID)
-		}
+		prefetchWindow(m.cache, msg.tracks, m.cursor)
 		return m, nil
 
 	case searchTickMsg:
@@ -202,13 +243,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			m.statusKind = "error"
 			m.isPlaying = false
+			m.isLoading = false
+			m.elapsedTime = 0
 		} else {
 			m.isPlaying = true
+			m.isLoading = false
 			m.currentTrack = &msg.track
 			m.elapsedTime = 0
 			m.totalMinutes += int(msg.track.Duration / 60)
 			m.statusMsg = "playing"
 			m.statusKind = "playing"
+
+			prefetchWindow(m.cache, m.searchResults, m.cursor)
 		}
 		return m, nil
 	}
@@ -236,13 +282,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch keyMsg.String() {
 			case "enter":
 				query := strings.TrimSpace(m.searchInput.Value())
-				m.isSearching = false
-				m.searchInput.Blur()
 				if query == "" {
 					m.statusMsg = "search cancelled"
 					m.statusKind = "idle"
+					m.isSearching = false
+					m.searchInput.Blur()
 					return m, nil
 				}
+				m.isSearching = false
+				m.searchInput.Blur()
+				m.searchGen++
 				m.statusMsg = "searching..."
 				m.statusKind = "idle"
 				return m, performSearch(query)
@@ -256,8 +305,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
+		prevValue := m.searchInput.Value()
 		var updateCmd tea.Cmd
 		m.searchInput, updateCmd = m.searchInput.Update(msg)
+
+		if newValue := m.searchInput.Value(); newValue != prevValue {
+			query := strings.TrimSpace(newValue)
+			if query == "" {
+				m.statusMsg = "search..."
+				m.statusKind = "idle"
+				return m, updateCmd
+			}
+			m.searchGen++
+			return m, tea.Batch(updateCmd, debounceSearch(m.searchGen, query))
+		}
+
 		return m, updateCmd
 	}
 
@@ -283,6 +345,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, debouncePrefetch(m.selectionGen, m.searchResults[m.cursor].ID)
 				}
 			}
+			return m, nil
 
 		case "k", "up":
 			if m.cursor > 0 {
@@ -292,44 +355,57 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, debouncePrefetch(m.selectionGen, m.searchResults[m.cursor].ID)
 				}
 			}
+			return m, nil
 
 		case " ":
-			if m.engine != nil && m.currentTrack != nil {
-				if m.elapsedTime.Seconds() >= m.currentTrack.Duration {
-					m.isPlaying = false
-					m.statusMsg = "finished"
-					m.statusKind = "idle"
-					return m, nil
-				}
-				err := m.engine.TogglePause()
-				if err != nil {
-					m.statusMsg = fmt.Sprintf("error: %v", err)
-					m.statusKind = "error"
-				} else {
-					m.isPlaying = !m.isPlaying
-					if m.isPlaying {
-						m.statusMsg = "playing"
-						m.statusKind = "playing"
-					} else {
-						m.statusMsg = "paused"
-						m.statusKind = "paused"
-					}
-				}
-			} else {
+			if m.engine == nil || m.currentTrack == nil {
 				m.statusMsg = "no track loaded"
 				m.statusKind = "idle"
+				return m, nil
+			}
+
+			if m.isLoading {
+				m.statusMsg = "loading..."
+				m.statusKind = "idle"
+				return m, nil
+			}
+
+			if m.elapsedTime.Seconds() >= m.currentTrack.Duration {
+				m.isPlaying = false
+				m.statusMsg = "finished"
+				m.statusKind = "idle"
+				return m, nil
+			}
+
+			if m.isPlaying {
+				if err := m.engine.Pause(); err != nil {
+					m.statusMsg = fmt.Sprintf("error: %v", err)
+					m.statusKind = "error"
+					return m, nil
+				}
+				m.isPlaying = false
+				m.statusMsg = "paused"
+				m.statusKind = "paused"
+			} else {
+				if err := m.engine.Resume(); err != nil {
+					m.statusMsg = fmt.Sprintf("error: %v", err)
+					m.statusKind = "error"
+					return m, nil
+				}
+				m.isPlaying = true
+				m.statusMsg = "playing"
+				m.statusKind = "playing"
 			}
 			return m, nil
 
 		case "enter":
 			if len(m.searchResults) > 0 && m.cursor < len(m.searchResults) {
-				selected := m.searchResults[m.cursor]
-				m.currentTrack = &selected
-				m.elapsedTime = 0
-				m.statusMsg = fmt.Sprintf("loading: %s", selected.Title)
-				m.statusKind = "idle"
-				return m, fetchTrack(m.engine, m.cache, selected)
+				if m.currentTrack != nil && m.searchResults[m.cursor].ID == m.currentTrack.ID {
+					return m, nil
+				}
+				return playTrackAt(m, m.cursor)
 			}
+			return m, nil
 		}
 	}
 

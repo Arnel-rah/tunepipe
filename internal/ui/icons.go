@@ -4,26 +4,24 @@ import "github.com/charmbracelet/lipgloss"
 
 const (
 	IconPlay    = "▶"
-	IconPause   = "⏸"
-	IconStop    = "⏹"
-	IconSearch  = "⌕"
-	IconMusic   = "◆"
+	IconPause   = "❚❚"
+	IconStop    = "■"
+	IconLoading = "◐"
+	IconMusic   = "♫"
 	IconNote    = "♪"
 	IconRail    = "▎"
-	IconBullet  = "·"
+	IconSearch  = "⌕"
+	IconArrow   = "▸"
+	IconBullet  = "●"
+	IconDiamond = "✦"
 	IconCheck   = "✓"
 	IconCross   = "✕"
-	IconLoading = "◐"
-	IconDiamond = "◆"
 	IconHeart   = "♥"
-	IconShuffle = "⤨"
-	IconRepeat  = "↻"
-	IconVolume  = "◔"
-	IconQueue   = "≡"
+	IconStar    = "★"
 
-	CharProgress = "─"
-	CharTrack    = "─"
 	CharRule     = "─"
+	CharProgress = "█"
+	CharTrack    = "░"
 )
 
 var (
@@ -38,64 +36,43 @@ var (
 			Render(IconPause)
 
 	StopIconStyle = lipgloss.NewStyle().
-			Foreground(TextDimColor).
+			Foreground(TextMutedColor).
 			Render(IconStop)
 
-	SearchIconStyle = lipgloss.NewStyle().
-			Foreground(TextMutedColor).
-			Render(IconSearch)
+	LoadingIconStyle = lipgloss.NewStyle().
+				Foreground(Violet).
+				Bold(true).
+				Render(IconLoading)
 
 	MusicIconStyle = lipgloss.NewStyle().
 			Foreground(Violet).
 			Render(IconMusic)
 
-	RailIconStyle = lipgloss.NewStyle().
+	SearchIconStyle = lipgloss.NewStyle().
 			Foreground(Violet).
-			Bold(true).
-			Render(IconRail)
+			Render(IconSearch)
+
+	ArrowIconStyle = lipgloss.NewStyle().
+			Foreground(Violet).
+			Render(IconArrow)
 
 	BulletIconStyle = lipgloss.NewStyle().
 			Foreground(TextMutedColor).
-			Background(BgColor).
 			Render(IconBullet)
-
-	CrossIconStyle = lipgloss.NewStyle().
-			Foreground(Red).
-			Background(BgColor).
-			Render(IconCross)
-
-	LoadingIconStyle = lipgloss.NewStyle().
-				Foreground(Amber).
-				Background(BgColor).
-				Render(IconLoading)
 
 	DiamondIconStyle = lipgloss.NewStyle().
 				Foreground(Violet).
-				Background(BgColor).
 				Render(IconDiamond)
 
+	CrossIconStyle = lipgloss.NewStyle().
+			Foreground(Red).
+			Render(IconCross)
+
 	HeartIconStyle = lipgloss.NewStyle().
-			Foreground(Magenta).
-			Background(BgColor).
+			Foreground(Red).
 			Render(IconHeart)
 
-	ShuffleIconStyle = lipgloss.NewStyle().
-				Foreground(Violet).
-				Background(BgColor).
-				Render(IconShuffle)
-
-	RepeatIconStyle = lipgloss.NewStyle().
-			Foreground(Violet).
-			Background(BgColor).
-			Render(IconRepeat)
-
-	VolumeIconStyle = lipgloss.NewStyle().
-			Foreground(TextMutedColor).
-			Background(BgColor).
-			Render(IconVolume)
-
-	QueueIconStyle = lipgloss.NewStyle().
-			Foreground(TextMutedColor).
-			Background(BgColor).
-			Render(IconQueue)
+	StarIconStyle = lipgloss.NewStyle().
+			Foreground(Amber).
+			Render(IconStar)
 )
