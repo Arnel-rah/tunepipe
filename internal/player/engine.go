@@ -67,7 +67,11 @@ func NewEngine(pipeName string) (*Engine, error) {
 }
 
 func (e *Engine) PlayURL(url string) error {
-	return e.ipcClient.SendExec("loadfile", url, "replace")
+	if err := e.ipcClient.SendExec("loadfile", url, "replace"); err != nil {
+		return err
+	}
+	
+	return e.ipcClient.SendExec("set_property", "pause", false)
 }
 
 func (e *Engine) TogglePause() error {

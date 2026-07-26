@@ -41,7 +41,6 @@ func renderDialog(m Model) string {
 	return lipgloss.NewStyle().
 		Width(m.width).
 		Height(m.height).
-		Background(BgColor).
 		Align(lipgloss.Center, lipgloss.Center).
 		Render(lipgloss.NewStyle().Width(width).Align(lipgloss.Center).Render(content))
 }

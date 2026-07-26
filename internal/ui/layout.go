@@ -47,17 +47,11 @@ func (m Model) View() string {
 	body := lipgloss.JoinVertical(lipgloss.Left, rows...)
 
 	content := lipgloss.NewStyle().
-		Background(BgColor).
 		Padding(1, 3).
 		Render(body)
 
-	// Fill the entire terminal viewport with BgColor — without this, any
-	// space the content doesn't reach (extra height, extra width) falls
-	// back to the terminal's own background, producing a visible seam
-	// between TunePipe's canvas and the terminal.
 	return lipgloss.NewStyle().
 		Width(m.width).
 		Height(m.height).
-		Background(BgColor).
 		Render(content)
 }

@@ -243,11 +243,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.statusKind = "idle"
 					return m, nil
 				}
-				if len(m.searchResults) > 0 {
-					m.statusMsg = fmt.Sprintf("%d results", len(m.searchResults))
-					m.statusKind = "idle"
-					return m, nil
-				}
 				m.statusMsg = "searching..."
 				m.statusKind = "idle"
 				return m, performSearch(query)

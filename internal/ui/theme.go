@@ -2,19 +2,16 @@ package ui
 
 import "github.com/charmbracelet/lipgloss"
 
-// Palette inspired by rocksky.app — deep violet-black canvas,
-// a single vivid violet accent, and a warm magenta for secondary emphasis.
-// Flat by design: no card backgrounds, no boxed surfaces.
 var (
-	BgColor     = lipgloss.Color("#0D0716") // canvas
-	SurfaceColor = lipgloss.Color("#150C24") // barely-there elevation (hover/input only)
+	BgColor     = lipgloss.Color("#0D0716")
+	SurfaceColor = lipgloss.Color("#150C24")
 
-	Violet     = lipgloss.Color("#8B5CF6") // primary accent
-	VioletDim  = lipgloss.Color("#5B4487") // muted accent for rails/markers
-	Magenta    = lipgloss.Color("#EC4899") // secondary accent (paused/heart)
+	Violet     = lipgloss.Color("#8B5CF6")
+	VioletDim  = lipgloss.Color("#5B4487")
+	Magenta    = lipgloss.Color("#EC4899")
 	White      = lipgloss.Color("#F5F2FF")
-	Lavender   = lipgloss.Color("#A99FC4") // dim text, tinted toward the palette
-	LavenderMuted = lipgloss.Color("#544A6E") // faint text / rails / dividers
+	Lavender   = lipgloss.Color("#A99FC4")
+	LavenderMuted = lipgloss.Color("#544A6E")
 	Red        = lipgloss.Color("#F5556C")
 	Amber      = lipgloss.Color("#F7B955")
 
@@ -39,18 +36,3 @@ type Theme struct {
 	TextMuted lipgloss.Color
 }
 
-var RockskyTheme = Theme{
-	Bg:        BgColor,
-	Surface:   SurfaceColor,
-	Violet:    Violet,
-	VioletDim: VioletDim,
-	Magenta:   Magenta,
-	White:     White,
-	Lavender:  Lavender,
-	Muted:     LavenderMuted,
-	Red:       Red,
-	Amber:     Amber,
-	Text:      TextColor,
-	TextDim:   TextDimColor,
-	TextMuted: TextMutedColor,
-}

@@ -9,7 +9,7 @@ const (
 	IconSearch  = "⌕"
 	IconMusic   = "◆"
 	IconNote    = "♪"
-	IconRail    = "▎" // selection / now-playing rail marker, replaces arrow+card
+	IconRail    = "▎"
 	IconBullet  = "·"
 	IconCheck   = "✓"
 	IconCross   = "✕"
@@ -55,38 +55,47 @@ var (
 			Render(IconRail)
 
 	BulletIconStyle = lipgloss.NewStyle().
-				Foreground(TextMutedColor).
-				Render(IconBullet)
+			Foreground(TextMutedColor).
+			Background(BgColor).
+			Render(IconBullet)
 
 	CrossIconStyle = lipgloss.NewStyle().
 			Foreground(Red).
+			Background(BgColor).
 			Render(IconCross)
 
 	LoadingIconStyle = lipgloss.NewStyle().
 				Foreground(Amber).
+				Background(BgColor).
 				Render(IconLoading)
 
 	DiamondIconStyle = lipgloss.NewStyle().
 				Foreground(Violet).
+				Background(BgColor).
 				Render(IconDiamond)
 
 	HeartIconStyle = lipgloss.NewStyle().
 			Foreground(Magenta).
+			Background(BgColor).
 			Render(IconHeart)
 
 	ShuffleIconStyle = lipgloss.NewStyle().
 				Foreground(Violet).
+				Background(BgColor).
 				Render(IconShuffle)
 
 	RepeatIconStyle = lipgloss.NewStyle().
-				Foreground(Violet).
-				Render(IconRepeat)
+			Foreground(Violet).
+			Background(BgColor).
+			Render(IconRepeat)
 
 	VolumeIconStyle = lipgloss.NewStyle().
-				Foreground(TextMutedColor).
-				Render(IconVolume)
+			Foreground(TextMutedColor).
+			Background(BgColor).
+			Render(IconVolume)
 
 	QueueIconStyle = lipgloss.NewStyle().
 			Foreground(TextMutedColor).
+			Background(BgColor).
 			Render(IconQueue)
 )
