@@ -10,7 +10,7 @@ func renderProgress(m Model, width int) string {
 		return ""
 	}
 
-	barWidth := width - 14
+	barWidth := width - 18
 	if barWidth < 10 {
 		barWidth = 10
 	}
@@ -49,11 +49,9 @@ func renderProgress(m Model, width int) string {
 			ProgressTrackStyle.Render(strings.Repeat(CharTrack, barWidth-filled))
 	}
 
-	content := fmt.Sprintf("%s %s %s",
-		TextMutedStyle.Render(elapsed),
+	return fmt.Sprintf("%s %s %s",
+		TextDimStyle.Render(elapsed),
 		bar,
-		TextMutedStyle.Render(total),
+		TextDimStyle.Render(total),
 	)
-
-	return content
 }
