@@ -2,8 +2,6 @@ package ui
 
 import "github.com/charmbracelet/lipgloss"
 
-// Flat design system — no borders, no boxed cards. Structure comes from
-// spacing, weight, and a single violet accent, not from containers.
 var (
 	TextStyle      = lipgloss.NewStyle().Foreground(TextColor)
 	TextDimStyle   = lipgloss.NewStyle().Foreground(TextDimColor)
@@ -12,7 +10,6 @@ var (
 	TitleStyle    = lipgloss.NewStyle().Foreground(White).Bold(true)
 	SubtitleStyle = lipgloss.NewStyle().Foreground(TextDimColor)
 
-	// Small-caps-style section labels used instead of card headers.
 	EyebrowStyle = lipgloss.NewStyle().Foreground(TextMutedColor).Bold(true)
 
 	LogoStyle   = lipgloss.NewStyle().Foreground(Violet).Bold(true)
@@ -29,7 +26,6 @@ var (
 	ProgressBarStyle   = lipgloss.NewStyle().Foreground(Violet)
 	ProgressTrackStyle = lipgloss.NewStyle().Foreground(LavenderMuted)
 
-	// Search is an underline, not a boxed input.
 	SearchInputStyle = lipgloss.NewStyle().
 				Foreground(TextColor)
 
@@ -38,16 +34,12 @@ var (
 
 	SearchPlaceholderStyle = lipgloss.NewStyle().Foreground(TextMutedColor)
 
-	// Line-level wrapper (adds consistent left/right margin to a result row).
 	RowStyle = lipgloss.NewStyle().
 			Padding(0, 1)
 
-	// Selection is shown with a violet left rail + bright text, never a
-	// full-width filled pill.
 	RowSelectedStyle = lipgloss.NewStyle().
 				Padding(0, 1)
 
-	// Inline text colors (no padding — used on title/artist segments).
 	RowTitleStyle          = lipgloss.NewStyle().Foreground(TextDimColor)
 	RowTitleSelectedStyle  = lipgloss.NewStyle().Foreground(White).Bold(true)
 	RowArtistStyle         = lipgloss.NewStyle().Foreground(TextMutedColor)
@@ -70,12 +62,10 @@ var (
 	NowPlayingTitleStyle  = lipgloss.NewStyle().Foreground(White).Bold(true)
 	NowPlayingArtistStyle = lipgloss.NewStyle().Foreground(TextDimColor)
 
-	// Rail markers used in place of bordered boxes / arrows.
-	RailStyle     = lipgloss.NewStyle().Foreground(Violet).Bold(true)
-	RailDimStyle  = lipgloss.NewStyle().Foreground(LavenderMuted)
+	RailStyle    = lipgloss.NewStyle().Foreground(Violet).Bold(true)
+	RailDimStyle = lipgloss.NewStyle().Foreground(LavenderMuted)
 )
 
-// Divider renders a full-width hairline rule in place of a bordered box.
 func Divider(width int) string {
 	if width < 1 {
 		width = 1
@@ -84,8 +74,6 @@ func Divider(width int) string {
 	return DividerStyle.Render(line)
 }
 
-// DividerDot renders the small inline "•" separator used between inline
-// stats (kept short and unobtrusive, not a rule).
 func DividerDot() string {
 	return TextMutedStyle.Render(" · ")
 }
