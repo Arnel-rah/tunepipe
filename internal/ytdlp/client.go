@@ -95,7 +95,8 @@ func Search(query string, limit int) ([]Track, error) {
 
 func SearchWithCache(query string, limit int) ([]Track, error) {
 	cache := GetSearchCache()
-	if results, ok := cache.Get(query); ok {
+	cacheKey := fmt.Sprintf("%d:%s", limit, query)
+	if results, ok := cache.Get(cacheKey); ok {
 		return results, nil
 	}
 
@@ -104,7 +105,7 @@ func SearchWithCache(query string, limit int) ([]Track, error) {
 		return nil, err
 	}
 
-	cache.Set(query, results)
+	cache.Set(cacheKey, results)
 	return results, nil
 }
 
