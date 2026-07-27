@@ -3,9 +3,6 @@ package ui
 import "github.com/charmbracelet/lipgloss"
 
 var (
-	BgColor      = lipgloss.Color("#130825")
-	SurfaceColor = lipgloss.Color("#221538")
-
 	PrimaryPink   = lipgloss.Color("#ff2876")
 	Violet        = lipgloss.Color("#8d2dff")
 	VioletDim     = lipgloss.Color("#5c2d91")
