@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"strings"
+
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -21,6 +23,10 @@ func (m Model) View() string {
 		return renderDialog(m)
 	}
 
+	if len(m.searchResults) == 0 && m.currentTrack == nil && !m.isSearching && !m.searchPending {
+		return renderWelcome(m, width)
+	}
+
 	header := renderHeader(m, width)
 	player := renderPlayer(m, width)
 	search := renderSearch(m, width)
@@ -28,23 +34,28 @@ func (m Model) View() string {
 	progress := renderProgress(m, width)
 	footer := renderFooter(m, width)
 
-	sections := []string{header, player, search}
-	if results != "" {
+	// Construction simple sans doublon
+	var sections []string
+	sections = append(sections, header)
+	sections = append(sections, "")
+	sections = append(sections, player)
+	sections = append(sections, "")
+	sections = append(sections, search)
+
+	if results != "" && !strings.Contains(results, "searching") {
+		sections = append(sections, "")
 		sections = append(sections, results)
 	}
+
 	if progress != "" {
+		sections = append(sections, "")
 		sections = append(sections, progress)
 	}
 
-	rule := DividerStyle.Render(repeat(CharRule, width))
+	sections = append(sections, "")
+	sections = append(sections, footer)
 
-	rows := []string{sections[0]}
-	for _, s := range sections[1:] {
-		rows = append(rows, "", rule, "", s)
-	}
-	rows = append(rows, "", rule, "", footer)
-
-	body := lipgloss.JoinVertical(lipgloss.Left, rows...)
+	body := lipgloss.JoinVertical(lipgloss.Left, sections...)
 
 	return lipgloss.NewStyle().
 		Padding(0, 1).
