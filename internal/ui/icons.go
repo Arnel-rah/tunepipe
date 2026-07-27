@@ -27,52 +27,57 @@ const (
 var (
 	PlayIconStyle = lipgloss.NewStyle().
 			Foreground(Violet).
-			Bold(true).
-			Render(IconPlay)
+			Bold(true)
 
 	PauseIconStyle = lipgloss.NewStyle().
 			Foreground(Amber).
-			Bold(true).
-			Render(IconPause)
+			Bold(true)
 
 	StopIconStyle = lipgloss.NewStyle().
-			Foreground(TextMutedColor).
-			Render(IconStop)
+			Foreground(TextMutedColor)
 
 	LoadingIconStyle = lipgloss.NewStyle().
 				Foreground(Violet).
-				Bold(true).
-				Render(IconLoading)
+				Bold(true)
 
 	MusicIconStyle = lipgloss.NewStyle().
-			Foreground(Violet).
-			Render(IconMusic)
+			Foreground(Violet)
 
 	SearchIconStyle = lipgloss.NewStyle().
-			Foreground(Violet).
-			Render(IconSearch)
+			Foreground(Violet)
 
 	ArrowIconStyle = lipgloss.NewStyle().
-			Foreground(Violet).
-			Render(IconArrow)
+			Foreground(Violet)
 
 	BulletIconStyle = lipgloss.NewStyle().
-			Foreground(TextMutedColor).
-			Render(IconBullet)
+			Foreground(TextMutedColor)
 
 	DiamondIconStyle = lipgloss.NewStyle().
-				Foreground(Violet).
-				Render(IconDiamond)
+				Foreground(Violet)
 
 	CrossIconStyle = lipgloss.NewStyle().
-			Foreground(Red).
-			Render(IconCross)
+			Foreground(Red)
 
 	HeartIconStyle = lipgloss.NewStyle().
-			Foreground(Red).
-			Render(IconHeart)
+			Foreground(Red)
 
 	StarIconStyle = lipgloss.NewStyle().
-			Foreground(Amber).
-			Render(IconStar)
+			Foreground(Amber)
 )
+
+func GetStatusIcon(status string) string {
+	switch status {
+	case "playing":
+		return PlayIconStyle.Render(IconPlay)
+	case "paused":
+		return PauseIconStyle.Render(IconPause)
+	case "loading":
+		return LoadingIconStyle.Render(IconLoading)
+	case "finished":
+		return StopIconStyle.Render(IconStop)
+	case "error":
+		return CrossIconStyle.Render(IconCross)
+	default:
+		return BulletIconStyle.Render(IconBullet)
+	}
+}

@@ -31,6 +31,10 @@ func renderFooter(m Model, width int) string {
 		style = StatusIdleStyle
 		icon = IconStop
 		status = "finished"
+	} else if len(m.searchResults) == 0 && m.currentTrack == nil {
+		style = StatusIdleStyle
+		icon = IconMusic
+		status = "welcome"
 	} else {
 		style = StatusIdleStyle
 		icon = IconBullet
@@ -77,10 +81,10 @@ func renderFooter(m Model, width int) string {
 		))
 	}
 
-	keysText := strings.Join(parts, "  ")
+	keysText := strings.Join(parts, " | ")
 
 	if width < 70 && len(parts) > 3 {
-		keysText = strings.Join(parts[:3], "  ")
+		keysText = strings.Join(parts[:3], " | ")
 	}
 
 	gap := width - lipgloss.Width(statusText) - lipgloss.Width(keysText) - 2

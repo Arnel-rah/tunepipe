@@ -1,6 +1,10 @@
 package ui
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"strings"
+
+	"github.com/charmbracelet/lipgloss"
+)
 
 var (
 	TextStyle      = lipgloss.NewStyle().Foreground(TextColor)
@@ -35,10 +39,16 @@ var (
 				Foreground(TextMutedColor)
 
 	RowStyle = lipgloss.NewStyle().
-			Padding(0, 1)
+			Padding(0, 1).
+			BorderStyle(lipgloss.Border{Left: " "}).
+			BorderLeft(true).
+			BorderForeground(TextDimColor)
 
 	RowSelectedStyle = lipgloss.NewStyle().
-				Padding(0, 1)
+				Padding(0, 1).
+				BorderStyle(lipgloss.Border{Left: "▍"}).
+				BorderLeft(true).
+				BorderForeground(Violet)
 
 	RowTitleStyle          = lipgloss.NewStyle().Foreground(TextDimColor)
 	RowTitleSelectedStyle  = lipgloss.NewStyle().Foreground(White).Bold(true)
@@ -64,43 +74,26 @@ var (
 
 	RailStyle    = lipgloss.NewStyle().Foreground(Violet).Bold(true)
 	RailDimStyle = lipgloss.NewStyle().Foreground(LavenderMuted)
+
+	WelcomeTitleStyle    = LogoStyle
+	WelcomeSubtitleStyle = SubtitleStyle
+	WelcomeHintStyle     = lipgloss.NewStyle().Foreground(Amber).Bold(true)
 )
 
 func Divider(width int) string {
 	if width < 1 {
 		width = 1
 	}
-	return DividerStyle.Render(repeat(CharRule, width))
+	return DividerStyle.Render(strings.Repeat(CharRule, width))
 }
 
 func DividerDot() string {
 	return TextMutedStyle.Render(" " + IconBullet + " ")
 }
 
-func GetStatusIcon(status string) string {
-	switch status {
-	case "playing":
-		return PlayIconStyle
-	case "paused":
-		return PauseIconStyle
-	case "loading":
-		return LoadingIconStyle
-	case "finished":
-		return StopIconStyle
-	case "error":
-		return CrossIconStyle
-	default:
-		return BulletIconStyle
-	}
-}
-
 func repeat(s string, n int) string {
 	if n <= 0 {
 		return ""
 	}
-	out := make([]byte, 0, len(s)*n)
-	for i := 0; i < n; i++ {
-		out = append(out, s...)
-	}
-	return string(out)
+	return strings.Repeat(s, n)
 }

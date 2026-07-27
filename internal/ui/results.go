@@ -13,6 +13,10 @@ func renderResults(m Model, width int) string {
 		return ""
 	}
 
+	if m.searchPending {
+		return TextDimStyle.Render(m.SpinnerFrame() + " searching...")
+	}
+
 	maxItems := 8
 	if m.height < 20 {
 		maxItems = 5
@@ -39,7 +43,6 @@ func renderResults(m Model, width int) string {
 
 func renderResultLine(track ytdlp.Track, selected bool, width int) string {
 	const (
-		railWidth   = 2
 		gap         = 2
 		artistWidth = 20
 	)
@@ -47,16 +50,14 @@ func renderResultLine(track ytdlp.Track, selected bool, width int) string {
 	lineStyle := RowStyle
 	titleStyle := RowTitleStyle
 	artistStyle := RowArtistStyle
-	rail := "  "
 	if selected {
 		lineStyle = RowSelectedStyle
 		titleStyle = RowTitleSelectedStyle
 		artistStyle = RowArtistSelectedStyle
-		rail = RailStyle.Render(IconRail) + " "
 	}
 
 	innerWidth := width - 2
-	titleWidth := innerWidth - railWidth - gap - artistWidth
+	titleWidth := innerWidth - gap - artistWidth
 	if titleWidth < 5 {
 		titleWidth = 5
 	}
@@ -82,7 +83,6 @@ func renderResultLine(track ytdlp.Track, selected bool, width int) string {
 
 	line := lipgloss.JoinHorizontal(
 		lipgloss.Left,
-		rail,
 		left,
 		"  ",
 		right,

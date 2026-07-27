@@ -6,50 +6,43 @@ import (
 
 func renderPlayer(m Model, width int) string {
 	if m.currentTrack == nil {
-		return TextMutedStyle.Render(IconMusic + "  nothing playing")
+		return TextMutedStyle.Render(IconMusic + "  ready to play")
 	}
 
 	var status string
 	var statusStyle lipgloss.Style
 	var icon string
 
-	if m.isLoading {
+	switch {
+	case m.isLoading:
 		status = "LOADING"
 		statusStyle = StatusLoadingStyle
-		icon = IconLoading
-	} else if m.isPlaying {
+		icon = m.SpinnerFrame()
+	case m.isPlaying:
 		status = "PLAYING"
 		statusStyle = StatusPlayingStyle
 		icon = IconPlay
-	} else if m.elapsedTime.Seconds() >= m.currentTrack.Duration && m.currentTrack.Duration > 0 {
+	case m.elapsedTime.Seconds() >= m.currentTrack.Duration && m.currentTrack.Duration > 0:
 		status = "FINISHED"
 		statusStyle = StatusIdleStyle
 		icon = IconStop
-	} else {
+	default:
 		status = "PAUSED"
 		statusStyle = StatusPausedStyle
 		icon = IconPause
 	}
-
-	maxLen := width - 4
-	if maxLen < 10 {
-		maxLen = 10
-	}
+	
+	textWidth := width - 4
 	if width < 50 {
-		maxLen = width - 8
+		textWidth = width - 8
+	}
+	if textWidth < 10 {
+		textWidth = 10
 	}
 
 	eyebrow := statusStyle.Render(icon + " " + status)
-	title := NowPlayingTitleStyle.Render(truncate(m.currentTrack.Title, maxLen))
+	title := NowPlayingTitleStyle.Render(truncate(m.currentTrack.Title, textWidth))
+	artist := NowPlayingArtistStyle.Render(truncate(m.currentTrack.Uploader, textWidth))
 
-	artistMaxLen := maxLen
-	if width < 50 {
-		artistMaxLen = maxLen - 8
-	}
-	artist := NowPlayingArtistStyle.Render(truncate(m.currentTrack.Uploader, artistMaxLen))
-
-	rail := RailStyle.Render(IconRail)
-	textBlock := lipgloss.JoinVertical(lipgloss.Left, eyebrow, title, artist)
-
-	return lipgloss.JoinHorizontal(lipgloss.Top, rail+" ", textBlock)
+	return lipgloss.JoinVertical(lipgloss.Left, eyebrow, title, artist)
 }

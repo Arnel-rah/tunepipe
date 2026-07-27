@@ -41,6 +41,7 @@ type Model struct {
 	cache         *ytdlp.URLCache
 	searchInput   textinput.Model
 	isSearching   bool
+	searchPending bool
 	searchResults []ytdlp.Track
 	cursor        int
 	selectionGen  int
@@ -90,6 +91,13 @@ func (m Model) Init() tea.Cmd {
 		textinput.Blink,
 		tickCmd(),
 	)
+}
+
+// SpinnerFrame retourne un caractère d'animation basé sur tickCount,
+// utilisable par les fonctions de rendu pendant searchPending/isLoading.
+func (m Model) SpinnerFrame() string {
+	frames := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+	return frames[m.tickCount%len(frames)]
 }
 
 func tickCmd() tea.Cmd {
@@ -201,6 +209,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tickCmd()
 
 	case searchResultsMsg:
+		m.searchPending = false
 		if msg.err != nil {
 			m.statusMsg = fmt.Sprintf("error: %v", msg.err)
 			m.statusKind = "error"
@@ -290,6 +299,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, nil
 				}
 				m.isSearching = false
+				m.searchPending = true
 				m.searchInput.Blur()
 				m.searchGen++
 				m.statusMsg = "searching..."
@@ -298,9 +308,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			case "esc":
 				m.isSearching = false
-				m.searchInput.Blur()
 				m.statusMsg = "search cancelled"
 				m.statusKind = "idle"
+				m.searchInput.Blur()
 				return m, nil
 			}
 		}
