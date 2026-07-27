@@ -93,6 +93,22 @@ func Search(query string, limit int) ([]Track, error) {
 	return tracks, nil
 }
 
+func SearchWithCache(query string, limit int) ([]Track, error) {
+	cache := GetSearchCache()
+	cacheKey := fmt.Sprintf("%d:%s", limit, query)
+	if results, ok := cache.Get(cacheKey); ok {
+		return results, nil
+	}
+
+	results, err := Search(query, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	cache.Set(cacheKey, results)
+	return results, nil
+}
+
 func tryFormats(binary, url string, baseArgs []string) (string, error) {
 	formatSelectors := []string{
 		"bestaudio[ext=m4a]",
