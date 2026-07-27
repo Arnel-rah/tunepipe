@@ -1,8 +1,6 @@
 package ui
 
 import (
-	"strings"
-
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -30,11 +28,17 @@ func (m Model) View() string {
 	header := renderHeader(m, width)
 	player := renderPlayer(m, width)
 	search := renderSearch(m, width)
-	results := renderResults(m, width)
+
+	var results string
+	if m.showQueue {
+		results = renderQueue(m, width)
+	} else {
+		results = renderResults(m, width)
+	}
+
 	progress := renderProgress(m, width)
 	footer := renderFooter(m, width)
 
-	// Construction simple sans doublon
 	var sections []string
 	sections = append(sections, header)
 	sections = append(sections, "")
@@ -42,7 +46,7 @@ func (m Model) View() string {
 	sections = append(sections, "")
 	sections = append(sections, search)
 
-	if results != "" && !strings.Contains(results, "searching") {
+	if results != "" {
 		sections = append(sections, "")
 		sections = append(sections, results)
 	}

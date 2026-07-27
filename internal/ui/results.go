@@ -29,10 +29,13 @@ func renderResults(m Model, width int) string {
 	lines := make([]string, 0, maxItems)
 
 	for i := 0; i < len(m.searchResults) && i < maxItems; i++ {
+		track := m.searchResults[i]
 		lines = append(lines,
 			renderResultLine(
-				m.searchResults[i],
+				track,
 				i == m.cursor,
+				m.IsQueued(track.ID),
+				true,
 				width,
 			),
 		)
@@ -41,7 +44,7 @@ func renderResults(m Model, width int) string {
 	return strings.Join(lines, "\n")
 }
 
-func renderResultLine(track ytdlp.Track, selected bool, width int) string {
+func renderResultLine(track ytdlp.Track, selected bool, queued bool, showQueuedBadge bool, width int) string {
 	const (
 		gap         = 2
 		artistWidth = 20
@@ -56,13 +59,20 @@ func renderResultLine(track ytdlp.Track, selected bool, width int) string {
 		artistStyle = RowArtistSelectedStyle
 	}
 
+	badge := ""
+	badgeWidth := 0
+	if queued && showQueuedBadge {
+		badge = AccentStyle.Render(IconQueued) + " "
+		badgeWidth = lipgloss.Width(badge)
+	}
+
 	innerWidth := width - 2
-	titleWidth := innerWidth - gap - artistWidth
+	titleWidth := innerWidth - gap - artistWidth - badgeWidth
 	if titleWidth < 5 {
 		titleWidth = 5
 	}
 	if width < 50 {
-		titleWidth = width - 25
+		titleWidth = width - 25 - badgeWidth
 		if titleWidth < 5 {
 			titleWidth = 5
 		}
@@ -83,6 +93,7 @@ func renderResultLine(track ytdlp.Track, selected bool, width int) string {
 
 	line := lipgloss.JoinHorizontal(
 		lipgloss.Left,
+		badge,
 		left,
 		"  ",
 		right,

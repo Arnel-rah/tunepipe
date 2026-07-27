@@ -54,6 +54,10 @@ type Model struct {
 	width         int
 	height        int
 
+	queue       []ytdlp.Track
+	showQueue   bool
+	queueCursor int
+
 	totalMinutes int
 	elapsedTime  time.Duration
 	scrobbles    int
@@ -98,6 +102,15 @@ func (m Model) SpinnerFrame() string {
 	return frames[m.tickCount%len(frames)]
 }
 
+func (m Model) IsQueued(trackID string) bool {
+	for _, t := range m.queue {
+		if t.ID == trackID {
+			return true
+		}
+	}
+	return false
+}
+
 func tickCmd() tea.Cmd {
 	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
 		return tickMsg(t)
@@ -136,13 +149,8 @@ func fetchTrack(engine *player.Engine, cache *ytdlp.URLCache, track ytdlp.Track)
 	}
 }
 
-func playTrackAt(m Model, i int) (Model, tea.Cmd) {
-	if i < 0 || i >= len(m.searchResults) {
-		return m, nil
-	}
-	selected := m.searchResults[i]
-	m.cursor = i
-	m.currentTrack = &selected
+func playTrack(m Model, track ytdlp.Track) (Model, tea.Cmd) {
+	m.currentTrack = &track
 	m.elapsedTime = 0
 	m.isPlaying = false
 	m.isLoading = true
@@ -154,7 +162,45 @@ func playTrackAt(m Model, i int) (Model, tea.Cmd) {
 		m.searchInput.Blur()
 	}
 
-	return m, fetchTrack(m.engine, m.cache, selected)
+	return m, fetchTrack(m.engine, m.cache, track)
+}
+
+func playTrackAt(m Model, i int) (Model, tea.Cmd) {
+	if i < 0 || i >= len(m.searchResults) {
+		return m, nil
+	}
+	m.cursor = i
+	return playTrack(m, m.searchResults[i])
+}
+
+func dequeueNext(m Model) (ytdlp.Track, Model, bool) {
+	if len(m.queue) == 0 {
+		return ytdlp.Track{}, m, false
+	}
+	next := m.queue[0]
+	m.queue = m.queue[1:]
+	return next, m, true
+}
+
+func toggleQueue(m Model, track ytdlp.Track) (Model, bool) {
+	for i, t := range m.queue {
+		if t.ID == track.ID {
+			m.queue = append(m.queue[:i], m.queue[i+1:]...)
+			return m, false
+		}
+	}
+	m.queue = append(m.queue, track)
+	return m, true
+}
+
+func playNextAuto(m Model) (Model, tea.Cmd) {
+	if next, updated, ok := dequeueNext(m); ok {
+		return playTrack(updated, next)
+	}
+	if m.cursor < len(m.searchResults)-1 {
+		return playTrackAt(m, m.cursor+1)
+	}
+	return m, nil
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -179,9 +225,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.statusMsg = "finished"
 				m.statusKind = "idle"
 
-				if m.cursor < len(m.searchResults)-1 {
-					nextTrack, cmd := playTrackAt(m, m.cursor+1)
-					return nextTrack, tea.Batch(tickCmd(), cmd)
+				nextModel, cmd := playNextAuto(m)
+				if cmd != nil {
+					return nextModel, tea.Batch(tickCmd(), cmd)
 				}
 			}
 		}
@@ -243,6 +289,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.statusKind = "playing"
 
 			m.cache.PrefetchWindow(m.searchResults, m.cursor)
+			if len(m.queue) > 0 {
+				m.cache.PrefetchWindow(m.queue, 0)
+			}
 		}
 		return m, nil
 	}
@@ -319,6 +368,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 
 		case "/":
+			m.showQueue = false
 			m.isSearching = true
 			m.searchInput.Focus()
 			m.searchInput.SetValue("")
@@ -326,7 +376,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.statusKind = "idle"
 			return m, nil
 
+		case "Q":
+			if m.showQueue || len(m.searchResults) > 0 || len(m.queue) > 0 {
+				m.showQueue = !m.showQueue
+				if m.showQueue && m.queueCursor >= len(m.queue) {
+					m.queueCursor = 0
+				}
+			}
+			return m, nil
+
 		case "j", "down":
+			if m.showQueue {
+				if m.queueCursor < len(m.queue)-1 {
+					m.queueCursor++
+				}
+				return m, nil
+			}
 			if m.cursor < len(m.searchResults)-1 {
 				m.cursor++
 				if len(m.searchResults) > 0 {
@@ -337,12 +402,53 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 
 		case "k", "up":
+			if m.showQueue {
+				if m.queueCursor > 0 {
+					m.queueCursor--
+				}
+				return m, nil
+			}
 			if m.cursor > 0 {
 				m.cursor--
 				if len(m.searchResults) > 0 {
 					m.selectionGen++
 					return m, debouncePrefetch(m.selectionGen, m.searchResults[m.cursor].ID)
 				}
+			}
+			return m, nil
+
+		case "a":
+			if !m.showQueue && len(m.searchResults) > 0 && m.cursor < len(m.searchResults) {
+				track := m.searchResults[m.cursor]
+				var added bool
+				m, added = toggleQueue(m, track)
+				if added {
+					m.statusMsg = fmt.Sprintf("added to queue (%d)", len(m.queue))
+				} else {
+					m.statusMsg = fmt.Sprintf("removed from queue (%d)", len(m.queue))
+				}
+				m.statusKind = "idle"
+			}
+			return m, nil
+
+		case "A":
+			if len(m.queue) > 0 {
+				m.queue = nil
+				m.queueCursor = 0
+				m.showQueue = false
+				m.statusMsg = "queue cleared"
+				m.statusKind = "idle"
+			}
+			return m, nil
+
+		case "x":
+			if m.showQueue && m.queueCursor < len(m.queue) {
+				m.queue = append(m.queue[:m.queueCursor], m.queue[m.queueCursor+1:]...)
+				if m.queueCursor >= len(m.queue) && m.queueCursor > 0 {
+					m.queueCursor--
+				}
+				m.statusMsg = fmt.Sprintf("removed from queue (%d)", len(m.queue))
+				m.statusKind = "idle"
 			}
 			return m, nil
 
@@ -387,7 +493,27 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 
+		case "n":
+			if len(m.queue) > 0 {
+				nextModel, cmd := playNextAuto(m)
+				return nextModel, cmd
+			}
+			m.statusMsg = "queue empty"
+			m.statusKind = "idle"
+			return m, nil
+
 		case "enter":
+			if m.showQueue {
+				if len(m.queue) > 0 && m.queueCursor < len(m.queue) {
+					track := m.queue[m.queueCursor]
+					m.queue = append(m.queue[:m.queueCursor], m.queue[m.queueCursor+1:]...)
+					if m.queueCursor >= len(m.queue) && m.queueCursor > 0 {
+						m.queueCursor--
+					}
+					return playTrack(m, track)
+				}
+				return m, nil
+			}
 			if len(m.searchResults) > 0 && m.cursor < len(m.searchResults) {
 				if m.currentTrack != nil && m.searchResults[m.cursor].ID == m.currentTrack.ID {
 					return m, nil
