@@ -22,6 +22,7 @@ const (
 	CharRule     = "─"
 	CharProgress = "█"
 	CharTrack    = "░"
+	IconQueued   = "≡"
 )
 
 var (
