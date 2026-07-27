@@ -10,7 +10,7 @@ func renderSearch(m Model, width int) string {
 	} else if len(m.searchResults) > 0 {
 		line = fmt.Sprintf("%s %s",
 			SearchIconStyle,
-			TextDimStyle.Render(fmt.Sprintf("%d results%s press / to search", len(m.searchResults), DividerDot())),
+			TextDimStyle.Render(fmt.Sprintf("%d results | press / to search", len(m.searchResults))),
 		)
 	} else {
 		line = SearchIconStyle + " " + SearchPlaceholderStyle.Render("search for a song...")

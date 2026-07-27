@@ -112,7 +112,7 @@ func debounceSearch(gen int, query string) tea.Cmd {
 
 func performSearch(query string) tea.Cmd {
 	return func() tea.Msg {
-		results, err := ytdlp.Search(query, 10)
+		results, err := ytdlp.SearchWithCache(query, 10)
 		return searchResultsMsg{tracks: results, err: err}
 	}
 }
