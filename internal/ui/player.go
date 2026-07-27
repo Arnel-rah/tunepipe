@@ -31,7 +31,7 @@ func renderPlayer(m Model, width int) string {
 		statusStyle = StatusPausedStyle
 		icon = IconPause
 	}
-	
+
 	textWidth := width - 4
 	if width < 50 {
 		textWidth = width - 8
