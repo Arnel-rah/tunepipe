@@ -130,20 +130,28 @@ func (c *SearchCache) getKey(query string) string {
 }
 
 func (c *SearchCache) Get(query string) ([]Track, bool) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
 	key := c.getKey(query)
+
+	c.mu.RLock()
 	entry, ok := c.entries[key]
 	if !ok {
+		c.mu.RUnlock()
+		return nil, false
+	}
+	expired := time.Now().After(entry.Expiry)
+	results := entry.Results
+	c.mu.RUnlock()
+
+	if expired {
+		c.mu.Lock()
+		if e, ok := c.entries[key]; ok && time.Now().After(e.Expiry) {
+			delete(c.entries, key)
+		}
+		c.mu.Unlock()
 		return nil, false
 	}
 
-	if time.Now().After(entry.Expiry) {
-		return nil, false
-	}
-
-	return entry.Results, true
+	return results, true
 }
 
 func (c *SearchCache) Set(query string, results []Track) {
