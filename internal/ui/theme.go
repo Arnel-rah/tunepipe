@@ -3,17 +3,18 @@ package ui
 import "github.com/charmbracelet/lipgloss"
 
 var (
-	BgColor     = lipgloss.Color("#0D0716")
-	SurfaceColor = lipgloss.Color("#150C24")
+	BgColor      = lipgloss.Color("#130825")
+	SurfaceColor = lipgloss.Color("#221538")
 
-	Violet     = lipgloss.Color("#8B5CF6")
-	VioletDim  = lipgloss.Color("#5B4487")
-	Magenta    = lipgloss.Color("#EC4899")
-	White      = lipgloss.Color("#F5F2FF")
-	Lavender   = lipgloss.Color("#A99FC4")
-	LavenderMuted = lipgloss.Color("#544A6E")
-	Red        = lipgloss.Color("#F5556C")
-	Amber      = lipgloss.Color("#F7B955")
+	PrimaryPink   = lipgloss.Color("#ff2876")
+	Violet        = lipgloss.Color("#8d2dff")
+	VioletDim     = lipgloss.Color("#5c2d91")
+	Magenta       = lipgloss.Color("#ff6aa8")
+	White         = lipgloss.Color("#f5efff")
+	Lavender      = lipgloss.Color("#c8b5d0")
+	LavenderMuted = lipgloss.Color("#7b6982")
+	Red           = lipgloss.Color("#ff5b7a")
+	Amber         = lipgloss.Color("#f7b955")
 
 	TextColor      = White
 	TextDimColor   = Lavender
@@ -35,4 +36,3 @@ type Theme struct {
 	TextDim   lipgloss.Color
 	TextMuted lipgloss.Color
 }
-

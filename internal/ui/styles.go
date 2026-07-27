@@ -14,19 +14,19 @@ var (
 	TitleStyle    = lipgloss.NewStyle().Foreground(White).Bold(true)
 	SubtitleStyle = lipgloss.NewStyle().Foreground(TextDimColor)
 
-	LogoStyle   = lipgloss.NewStyle().Foreground(Violet).Bold(true)
-	AccentStyle = lipgloss.NewStyle().Foreground(Violet).Bold(true)
+	LogoStyle   = lipgloss.NewStyle().Foreground(PrimaryPink).Bold(true)
+	AccentStyle = lipgloss.NewStyle().Foreground(PrimaryPink).Bold(true)
 
 	StatLabelStyle = lipgloss.NewStyle().Foreground(TextMutedColor)
 	StatValueStyle = lipgloss.NewStyle().Foreground(White).Bold(true)
 
-	StatusPlayingStyle = lipgloss.NewStyle().Foreground(Violet).Bold(true)
+	StatusPlayingStyle = lipgloss.NewStyle().Foreground(PrimaryPink).Bold(true)
 	StatusPausedStyle  = lipgloss.NewStyle().Foreground(Amber).Bold(true)
 	StatusErrorStyle   = lipgloss.NewStyle().Foreground(Red).Bold(true)
 	StatusIdleStyle    = lipgloss.NewStyle().Foreground(TextMutedColor)
 	StatusLoadingStyle = lipgloss.NewStyle().Foreground(Violet).Bold(true)
 
-	ProgressBarStyle   = lipgloss.NewStyle().Foreground(Violet)
+	ProgressBarStyle   = lipgloss.NewStyle().Foreground(PrimaryPink)
 	ProgressTrackStyle = lipgloss.NewStyle().Foreground(LavenderMuted)
 
 	SearchInputStyle = lipgloss.NewStyle().
@@ -48,15 +48,15 @@ var (
 				Padding(0, 1).
 				BorderStyle(lipgloss.Border{Left: "▍"}).
 				BorderLeft(true).
-				BorderForeground(Violet)
+				BorderForeground(PrimaryPink)
 
 	RowTitleStyle          = lipgloss.NewStyle().Foreground(TextDimColor)
 	RowTitleSelectedStyle  = lipgloss.NewStyle().Foreground(White).Bold(true)
 	RowArtistStyle         = lipgloss.NewStyle().Foreground(TextMutedColor)
-	RowArtistSelectedStyle = lipgloss.NewStyle().Foreground(Violet)
+	RowArtistSelectedStyle = lipgloss.NewStyle().Foreground(PrimaryPink)
 
 	KeyHintKeyStyle = lipgloss.NewStyle().
-			Foreground(Violet).
+			Foreground(PrimaryPink).
 			Bold(true)
 
 	KeyHintTextStyle = lipgloss.NewStyle().
@@ -72,7 +72,7 @@ var (
 	NowPlayingTitleStyle  = lipgloss.NewStyle().Foreground(White).Bold(true)
 	NowPlayingArtistStyle = lipgloss.NewStyle().Foreground(TextDimColor)
 
-	RailStyle    = lipgloss.NewStyle().Foreground(Violet).Bold(true)
+	RailStyle    = lipgloss.NewStyle().Foreground(PrimaryPink).Bold(true)
 	RailDimStyle = lipgloss.NewStyle().Foreground(LavenderMuted)
 
 	WelcomeTitleStyle    = LogoStyle

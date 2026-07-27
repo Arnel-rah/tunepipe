@@ -17,7 +17,7 @@ func renderWelcome(m Model, width int) string {
 	}
 
 	title := lipgloss.NewStyle().
-		Foreground(Violet).
+		Foreground(PrimaryPink).
 		Bold(true).
 		Render("♪ TunePipe")
 
