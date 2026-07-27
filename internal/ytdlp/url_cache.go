@@ -3,6 +3,7 @@ package ytdlp
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"strings"
 	"sync"
 	"time"
 )
@@ -22,13 +23,86 @@ type URLCache struct {
 	mu      sync.Mutex
 	entries map[string]*urlCacheEntry
 	ttl     time.Duration
+	jobs    chan string
+	closeCh chan struct{}
+	once    sync.Once
 }
 
+const prefetchWorkers = 4
+
 func NewURLCache(ttl time.Duration) *URLCache {
-	return &URLCache{
+	c := &URLCache{
 		entries: make(map[string]*urlCacheEntry),
 		ttl:     ttl,
+		jobs:    make(chan string, 64),
+		closeCh: make(chan struct{}),
 	}
+
+	// Prefetcher dédié : pool de workers bornés au lieu de
+	// goroutines non limitées à chaque appel de Prefetch.
+	for i := 0; i < prefetchWorkers; i++ {
+		go c.prefetchWorker()
+	}
+
+	go c.cleanupLoop()
+
+	return c
+}
+
+func (c *URLCache) prefetchWorker() {
+	for {
+		select {
+		case videoID, ok := <-c.jobs:
+			if !ok {
+				return
+			}
+			c.mu.Lock()
+			entry, exists := c.entries[videoID]
+			c.mu.Unlock()
+			if !exists {
+				continue
+			}
+			url, err := FetchDirectURL(videoID)
+			entry.url = url
+			entry.err = err
+			close(entry.ready)
+		case <-c.closeCh:
+			return
+		}
+	}
+}
+
+func (c *URLCache) cleanupLoop() {
+	ticker := time.NewTicker(2 * time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			c.mu.Lock()
+			now := time.Now()
+			for id, entry := range c.entries {
+				select {
+				case <-entry.ready:
+					if now.After(entry.expiry) {
+						delete(c.entries, id)
+					}
+				default:
+					// fetch encore en cours, on ne touche pas
+				}
+			}
+			c.mu.Unlock()
+		case <-c.closeCh:
+			return
+		}
+	}
+}
+
+// Close arrête proprement les workers et le nettoyage périodique.
+// À appeler une fois, en fin de vie du programme.
+func (c *URLCache) Close() {
+	c.once.Do(func() {
+		close(c.closeCh)
+	})
 }
 
 func (c *URLCache) Prefetch(videoID string) {
@@ -45,12 +119,16 @@ func (c *URLCache) Prefetch(videoID string) {
 	c.entries[videoID] = entry
 	c.mu.Unlock()
 
-	go func() {
-		url, err := FetchDirectURL(videoID)
-		entry.url = url
-		entry.err = err
-		close(entry.ready)
-	}()
+	select {
+	case c.jobs <- videoID:
+	default:
+		go func() {
+			url, err := FetchDirectURL(videoID)
+			entry.url = url
+			entry.err = err
+			close(entry.ready)
+		}()
+	}
 }
 
 func (c *URLCache) Get(videoID string) (string, error) {
@@ -66,6 +144,25 @@ func (c *URLCache) Get(videoID string) (string, error) {
 
 	<-entry.ready
 	return entry.url, entry.err
+}
+
+func (c *URLCache) PrefetchWindow(tracks []Track, centerIdx int) {
+	if c == nil || len(tracks) == 0 {
+		return
+	}
+	const ahead = 3
+	const behind = 1
+	start := centerIdx - behind
+	if start < 0 {
+		start = 0
+	}
+	end := centerIdx + ahead
+	if end > len(tracks)-1 {
+		end = len(tracks) - 1
+	}
+	for i := start; i <= end; i++ {
+		c.Prefetch(tracks[i].ID)
+	}
 }
 
 func (c *URLCache) Invalidate(videoID string) {
@@ -124,8 +221,14 @@ func getSearchCache() *SearchCache {
 	return globalSearchCache
 }
 
+// normalizeQuery uniformise la requête avant hachage pour que des
+// variations triviales (casse, espaces) partagent la même entrée.
+func normalizeQuery(query string) string {
+	return strings.ToLower(strings.TrimSpace(query))
+}
+
 func (c *SearchCache) getKey(query string) string {
-	hash := sha256.Sum256([]byte(query))
+	hash := sha256.Sum256([]byte(normalizeQuery(query)))
 	return hex.EncodeToString(hash[:])
 }
 

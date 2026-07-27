@@ -93,8 +93,6 @@ func (m Model) Init() tea.Cmd {
 	)
 }
 
-// SpinnerFrame retourne un caractère d'animation basé sur tickCount,
-// utilisable par les fonctions de rendu pendant searchPending/isLoading.
 func (m Model) SpinnerFrame() string {
 	frames := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
 	return frames[m.tickCount%len(frames)]
@@ -135,25 +133,6 @@ func fetchTrack(engine *player.Engine, cache *ytdlp.URLCache, track ytdlp.Track)
 			return trackReadyMsg{track: track, directURL: "", err: err}
 		}
 		return trackReadyMsg{track: track, directURL: directURL, err: nil}
-	}
-}
-
-func prefetchWindow(cache *ytdlp.URLCache, tracks []ytdlp.Track, centerIdx int) {
-	if cache == nil || len(tracks) == 0 {
-		return
-	}
-	const ahead = 3
-	const behind = 1
-	start := centerIdx - behind
-	if start < 0 {
-		start = 0
-	}
-	end := centerIdx + ahead
-	if end > len(tracks)-1 {
-		end = len(tracks) - 1
-	}
-	for i := start; i <= end; i++ {
-		cache.Prefetch(tracks[i].ID)
 	}
 }
 
@@ -225,7 +204,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.statusKind = "idle"
 		}
 
-		prefetchWindow(m.cache, msg.tracks, m.cursor)
+		m.cache.PrefetchWindow(msg.tracks, m.cursor)
 		return m, nil
 
 	case searchTickMsg:
@@ -263,7 +242,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.statusMsg = "playing"
 			m.statusKind = "playing"
 
-			prefetchWindow(m.cache, m.searchResults, m.cursor)
+			m.cache.PrefetchWindow(m.searchResults, m.cursor)
 		}
 		return m, nil
 	}
