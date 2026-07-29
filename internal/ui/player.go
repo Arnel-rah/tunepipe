@@ -14,28 +14,14 @@ func renderPlayer(m Model, width int) string {
 	elapsed := fmt.Sprintf("%d:%02d", int(m.elapsedTime.Minutes()), int(m.elapsedTime.Seconds())%60)
 	total := fmt.Sprintf("%d:%02d", int(m.currentTrack.Duration/60), int(m.currentTrack.Duration)%60)
 
-	innerWidth := width - 4 // TopBarStyle border (2) + padding (2)
-	if innerWidth < 0 {
-		innerWidth = 0
-	}
-
-	minCenterWidth := 18
-	sideWidth := 14
-	if innerWidth < 2*sideWidth+minCenterWidth {
-		sideWidth = (innerWidth - minCenterWidth) / 2
-		if sideWidth < 6 {
-			sideWidth = 6
-		}
-	}
-	centerWidth := innerWidth - 2*sideWidth
-	if centerWidth < minCenterWidth {
-		centerWidth = minCenterWidth
-	}
-
-	leftText := truncate(IconMusic+" "+elapsed+"/"+total, sideWidth)
 	left := lipgloss.NewStyle().
-		Width(sideWidth).
-		Render(TextDimStyle.Render(leftText))
+		Width(14).
+		Render(TextDimStyle.Render(IconMusic + " " + elapsed + "/" + total))
+
+	centerWidth := width - 28
+	if centerWidth < 18 {
+		centerWidth = 18
+	}
 
 	title := lipgloss.NewStyle().
 		Width(centerWidth).

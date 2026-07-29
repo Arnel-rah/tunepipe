@@ -54,8 +54,7 @@ func renderResults(m Model, width int) string {
 
 func renderTableHeader(width int) string {
 	titleWidth, artistWidth, durationWidth := tableColumnWidths(width)
-	line := fmt.Sprintf("%-*s  %-*s  %*s", titleWidth, "Title", artistWidth, "Artist", durationWidth, "Duration")
-	return TableHeaderStyle.Padding(0, 1).Width(width).Render(line)
+	return TableHeaderStyle.Render(fmt.Sprintf("%-*s  %-*s  %*s", titleWidth, "Title", artistWidth, "Artist", durationWidth, "Duration"))
 }
 
 func renderResultLine(track ytdlp.Track, selected bool, width int) string {
