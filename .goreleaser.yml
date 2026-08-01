@@ -6,7 +6,7 @@ before:
 
 builds:
   - id: tunepipe
-    main: ./main.go
+    main: ./main.go   # adapte si ton entrypoint est ailleurs, ex: ./cmd/tunepipe
     env:
       - CGO_ENABLED=0
     goos:
@@ -20,12 +20,12 @@ builds:
       - -s -w -X main.version={{.Version}}
 
 archives:
-  - formats: [ tar.gz ]
+  - format: tar.gz
     name_template: >-
       {{ .ProjectName }}_{{ .Os }}_{{ .Arch }}
     format_overrides:
       - goos: windows
-        formats: [ zip ]
+        format: zip
 
 checksum:
   name_template: 'checksums.txt'
