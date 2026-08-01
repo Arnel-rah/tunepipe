@@ -1,5 +1,3 @@
-package main
-
 import (
 	"fmt"
 	"io"
@@ -82,14 +80,9 @@ func downloadYtDlp() (string, error) {
 	return dest, nil
 }
 
-func ytDlpWorks(path string) bool {
-	cmd := exec.Command(path, "--simulate", "--skip-download", "--no-warnings", "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
-	return cmd.Run() == nil
-}
-
 func ensureYtDlp() (string, error) {
 	if path, err := exec.LookPath("yt-dlp"); err == nil {
-		if ytDlpWorks(path) {
+		if exec.Command(path, "--version").Run() == nil {
 			return path, nil
 		}
 	}
@@ -102,7 +95,7 @@ func ensureYtDlp() (string, error) {
 		}
 		localPath := filepath.Join(dir, name)
 		if _, statErr := os.Stat(localPath); statErr == nil {
-			if ytDlpWorks(localPath) {
+			if exec.Command(localPath, "--version").Run() == nil {
 				return localPath, nil
 			}
 		}
@@ -144,6 +137,7 @@ func main() {
 		os.Exit(1)
 	}
 	ytdlp.SetBinary(ytDlpPath)
+
 	if err := ensureMpv(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
