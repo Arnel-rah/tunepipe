@@ -1,5 +1,3 @@
-package main
-
 import (
 	"fmt"
 	"io"
@@ -11,6 +9,7 @@ import (
 
 	"github.com/Arnel-rah/tunepipe/internal/player"
 	"github.com/Arnel-rah/tunepipe/internal/ui"
+	"github.com/Arnel-rah/tunepipe/internal/ytdlp"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -137,6 +136,8 @@ func main() {
 		fmt.Println("Installe-le manuellement depuis : https://github.com/yt-dlp/yt-dlp/releases")
 		os.Exit(1)
 	}
+	ytdlp.SetBinary(ytDlpPath)
+
 	if err := ensureMpv(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
