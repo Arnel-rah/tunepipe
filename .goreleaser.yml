@@ -6,7 +6,7 @@ before:
 
 builds:
   - id: tunepipe
-    main: ./main.go   # adapte si ton entrypoint est ailleurs, ex: ./cmd/tunepipe
+    main: ./main.go
     env:
       - CGO_ENABLED=0
     goos:
@@ -46,5 +46,6 @@ brews:
   - repository:
       owner: Arnel-rah
       name: homebrew-tunepipe
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     homepage: "https://github.com/Arnel-rah/tunepipe"
     description: "A minimal TUI music player powered by yt-dlp"
