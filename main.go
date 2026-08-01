@@ -137,15 +137,13 @@ func main() {
 		fmt.Println("Installe-le manuellement depuis : https://github.com/yt-dlp/yt-dlp/releases")
 		os.Exit(1)
 	}
-	os.Setenv("TUNEPIPE_YTDLP_PATH", ytDlpPath)
-
 	if err := ensureMpv(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
 	pipeName := "tunepipe-mpv"
-	eng, err := player.NewEngine(pipeName)
+	eng, err := player.NewEngine(pipeName, ytDlpPath)
 	if err != nil {
 		fmt.Printf("Erreur au demarrage de mpv: %v\n", err)
 		os.Exit(1)
