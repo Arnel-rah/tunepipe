@@ -14,14 +14,14 @@ A minimal, terminal-based music player powered by [`yt-dlp`](https://github.com/
 
 ## Requirements
 
-`tunepipe` relies on the following external tools being available in your `PATH`:
+`tunepipe` relies on the following external tools:
 
 | Tool | Purpose | Install |
 |------|---------|---------|
-| [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) | Resolving and extracting audio streams | `pip install yt-dlp` or see [releases](https://github.com/yt-dlp/yt-dlp/releases) |
-| `ffmpeg` | Audio decoding/playback | [ffmpeg.org/download](https://ffmpeg.org/download.html) |
+| `mpv` | Audio playback engine | `winget install mpv-player.mpv` (Windows), `brew install mpv` (macOS), package manager on Linux |
+| [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) | Resolving and extracting audio streams | Optional in `PATH`; if missing, `tunepipe` downloads a local standalone binary automatically |
 
-`tunepipe` checks for these on startup and will warn you if they're missing.
+`tunepipe` checks these at startup and exits with an install hint if `mpv` is missing.
 
 ## Installation
 
@@ -34,23 +34,23 @@ brew install Arnel-rah/tunepipe/tunepipe
 ### Go install
 
 ```bash
-go install github.com/nel/tunepipe@latest
+go install github.com/Arnel-rah/tunepipe@latest
 ```
 
 ### Prebuilt binaries
 
-Download the latest binary for your platform from the [Releases page](https://github.com/nel/tunepipe/releases).
+Download the latest binary for your platform from the [Releases page](https://github.com/Arnel-rah/tunepipe/releases).
 
 ```bash
 # Example: Linux amd64
-curl -L https://github.com/nel/tunepipe/releases/latest/download/tunepipe_linux_amd64.tar.gz | tar xz
+curl -L https://github.com/Arnel-rah/tunepipe/releases/latest/download/tunepipe_linux_amd64.tar.gz | tar xz
 sudo mv tunepipe /usr/local/bin/
 ```
 
 ### From source
 
 ```bash
-git clone https://github.com/nel/tunepipe.git
+git clone https://github.com/Arnel-rah/tunepipe.git
 cd tunepipe
 go build -o tunepipe
 ```
@@ -95,7 +95,7 @@ theme: monochrome
 ## Development
 
 ```bash
-git clone https://github.com/nel/tunepipe.git
+git clone https://github.com/Arnel-rah/tunepipe.git
 cd tunepipe
 go mod tidy
 go run main.go
@@ -106,8 +106,13 @@ go run main.go
 Releases are automated with [GoReleaser](https://goreleaser.com) via GitHub Actions. Push a semver tag to trigger a release:
 
 ```bash
-git tag -a v0.1.0 -m "first release"
-git push origin v0.1.0
+git checkout -b fix/windows-ytdlp-path-resolution
+git add .
+git commit -m "fix(windows): use resolved yt-dlp binary everywhere to avoid broken PATH python shim"
+git push -u origin fix/windows-ytdlp-path-resolution
+
+git tag -a v0.2.1 -m "v0.2.1"
+git push origin v0.2.1
 ```
 
 ## License
