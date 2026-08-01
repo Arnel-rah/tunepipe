@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"tunepipe/internal/player"
-	"tunepipe/internal/ytdlp"
+	"github.com/Arnel-rah/tunepipe/internal/player"
+	"github.com/Arnel-rah/tunepipe/internal/ytdlp"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"

@@ -3,7 +3,7 @@
 A minimal, terminal-based music player powered by [`yt-dlp`](https://github.com/yt-dlp/yt-dlp). Search, browse, and play audio streams directly from your terminal — no browser, no bloat.
 
 ![style](https://img.shields.io/badge/style-monochrome-000000)
-![go version](https://img.shields.io/badge/go-1.22%2B-00ADD8)
+![go version](https://img.shields.io/badge/go-1.26%2B-00ADD8)
 
 ## Features
 
@@ -28,29 +28,29 @@ A minimal, terminal-based music player powered by [`yt-dlp`](https://github.com/
 ### Homebrew (macOS/Linux)
 
 ```bash
-brew install nel/tunepipe/tunepipe
+brew install Arnel-rah/tunepipe/tunepipe
 ```
 
 ### Go install
 
 ```bash
-go install github.com/Arnel-rah/tunepipe@latest
+go install github.com/nel/tunepipe@latest
 ```
 
 ### Prebuilt binaries
 
-Download the latest binary for your platform from the [Releases page](https://github.com/Arnel-rah/tunepipe/releases).
+Download the latest binary for your platform from the [Releases page](https://github.com/nel/tunepipe/releases).
 
 ```bash
 # Example: Linux amd64
-curl -L https://github.com/Arnel-rah/tunepipe/releases/latest/download/tunepipe_linux_amd64.tar.gz | tar xz
+curl -L https://github.com/nel/tunepipe/releases/latest/download/tunepipe_linux_amd64.tar.gz | tar xz
 sudo mv tunepipe /usr/local/bin/
 ```
 
 ### From source
 
 ```bash
-git clone https://github.com/Arnel-rah/tunepipe.git
+git clone https://github.com/nel/tunepipe.git
 cd tunepipe
 go build -o tunepipe
 ```
@@ -95,7 +95,7 @@ theme: monochrome
 ## Development
 
 ```bash
-git clone https://github.com/Arnel-rah/tunepipe.git
+git clone https://github.com/nel/tunepipe.git
 cd tunepipe
 go mod tidy
 go run main.go

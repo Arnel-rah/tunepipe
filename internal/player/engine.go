@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"tunepipe/internal/ipc"
+	"github.com/Arnel-rah/tunepipe/internal/ipc"
 )
 
 type Engine struct {

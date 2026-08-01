@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"tunepipe/internal/ytdlp"
+	"github.com/Arnel-rah/tunepipe/internal/ytdlp"
 
 	"github.com/charmbracelet/lipgloss"
 )

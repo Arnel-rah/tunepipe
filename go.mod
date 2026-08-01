@@ -1,4 +1,4 @@
-module tunepipe
+module github.com/Arnel-rah/tunepipe
 
 go 1.26.4
 
