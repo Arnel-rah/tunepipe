@@ -25,7 +25,7 @@ func getMPVBinary() string {
 	return "mpv"
 }
 
-func NewEngine(pipeName string) (*Engine, error) {
+func NewEngine(pipeName string, ytDlpPath string) (*Engine, error) {
 	binary := getMPVBinary()
 
 	var pipePath string
@@ -35,13 +35,19 @@ func NewEngine(pipeName string) (*Engine, error) {
 		pipePath = "/tmp/" + pipeName
 	}
 
-	cmd := exec.Command(binary,
+	args := []string{
 		"--idle",
 		"--no-video",
 		"--no-terminal",
 		"--really-quiet",
 		fmt.Sprintf("--input-ipc-server=%s", pipePath),
-	)
+	}
+
+	if ytDlpPath != "" {
+		args = append(args, fmt.Sprintf("--script-opts=ytdl_hook-ytdl_path=%s", ytDlpPath))
+	}
+
+	cmd := exec.Command(binary, args...)
 
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("impossible de demarrer mpv: %w", err)
