@@ -17,7 +17,16 @@ type Track struct {
 	Duration float64 `json:"duration"`
 }
 
+var configuredBinary string
+
+func SetBinary(path string) {
+	configuredBinary = path
+}
+
 func getYTDLPBinary() string {
+	if configuredBinary != "" {
+		return configuredBinary
+	}
 	if _, err := os.Stat(".\\yt-dlp.exe"); err == nil {
 		return ".\\yt-dlp.exe"
 	}
@@ -25,13 +34,14 @@ func getYTDLPBinary() string {
 }
 
 func getCookiesOption() []string {
+	binary := getYTDLPBinary()
 	if runtime.GOOS == "windows" {
 		if _, err := os.Stat("cookies.txt"); err == nil {
 			return []string{"--cookies", "cookies.txt"}
 		}
 		browsers := []string{"firefox", "chrome", "edge", "brave"}
 		for _, b := range browsers {
-			check := exec.Command("yt-dlp", "--cookies-from-browser", b, "--cookies", "test.txt")
+			check := exec.Command(binary, "--cookies-from-browser", b, "--cookies", "test.txt")
 			if err := check.Run(); err == nil {
 				os.Remove("test.txt")
 				return []string{"--cookies-from-browser", b}

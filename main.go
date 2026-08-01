@@ -11,6 +11,7 @@ import (
 
 	"github.com/Arnel-rah/tunepipe/internal/player"
 	"github.com/Arnel-rah/tunepipe/internal/ui"
+	"github.com/Arnel-rah/tunepipe/internal/ytdlp"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -81,9 +82,14 @@ func downloadYtDlp() (string, error) {
 	return dest, nil
 }
 
+func ytDlpWorks(path string) bool {
+	cmd := exec.Command(path, "--simulate", "--skip-download", "--no-warnings", "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+	return cmd.Run() == nil
+}
+
 func ensureYtDlp() (string, error) {
 	if path, err := exec.LookPath("yt-dlp"); err == nil {
-		if exec.Command(path, "--version").Run() == nil {
+		if ytDlpWorks(path) {
 			return path, nil
 		}
 	}
@@ -96,7 +102,7 @@ func ensureYtDlp() (string, error) {
 		}
 		localPath := filepath.Join(dir, name)
 		if _, statErr := os.Stat(localPath); statErr == nil {
-			if exec.Command(localPath, "--version").Run() == nil {
+			if ytDlpWorks(localPath) {
 				return localPath, nil
 			}
 		}
@@ -137,6 +143,7 @@ func main() {
 		fmt.Println("Installe-le manuellement depuis : https://github.com/yt-dlp/yt-dlp/releases")
 		os.Exit(1)
 	}
+	ytdlp.SetBinary(ytDlpPath)
 	if err := ensureMpv(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
