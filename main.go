@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"tunepipe/internal/player"
-	"tunepipe/internal/ui"
+	"github.com/Arnel-rah/tunepipe/internal/player"
+	"github.com/Arnel-rah/tunepipe/internal/ui"
 
 	tea "github.com/charmbracelet/bubbletea"
 )

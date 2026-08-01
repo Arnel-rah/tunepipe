@@ -18,3 +18,5 @@ Thumbs.db
 *.tmp
 
 yt-dlp.exe
+
+dist/
