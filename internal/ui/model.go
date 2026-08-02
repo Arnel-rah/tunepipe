@@ -7,6 +7,7 @@ import (
 
 	"github.com/Arnel-rah/tunepipe/internal/player"
 	"github.com/Arnel-rah/tunepipe/internal/ytdlp"
+	"github.com/Arnel-rah/tunepipe/internal/notify"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -138,6 +139,14 @@ func performSearch(query string) tea.Cmd {
 
 func fetchTrack(engine *player.Engine, cache *ytdlp.URLCache, track ytdlp.Track) tea.Cmd {
 	return func() tea.Msg {
+		// Prefer a local cached file when available to enable offline playback.
+		if local := ytdlp.CachedFilePath(track.ID); local != "" {
+			if err := engine.PlayURL(local); err != nil {
+				return trackReadyMsg{track: track, directURL: "", err: err}
+			}
+			return trackReadyMsg{track: track, directURL: local, err: nil}
+		}
+
 		directURL, err := cache.Get(track.ID)
 		if err != nil {
 			return trackReadyMsg{track: track, directURL: "", err: err}
@@ -292,8 +301,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if len(m.queue) > 0 {
 				m.cache.PrefetchWindow(m.queue, 0)
 			}
-		}
-		return m, nil
+
+				// Track play counting and opportunistic offline caching:
+				if count := ytdlp.IncrementPlayCount(msg.track.ID); count >= 3 {
+					go func(id string) {
+						_, _ = ytdlp.EnsureDownloaded(id)
+					}(msg.track.ID)
+				}
+
+				// Best-effort OS notification about current track
+				go func(t ytdlp.Track) {
+					_ = notify.NotifyTrack(t)
+				}(msg.track)
+			}
+			return m, nil
 	}
 
 	if m.confirmQuit {
