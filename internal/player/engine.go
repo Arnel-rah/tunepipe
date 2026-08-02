@@ -41,6 +41,7 @@ func NewEngine(pipeName string, ytDlpPath string) (*Engine, error) {
 		"--no-terminal",
 		"--really-quiet",
 		fmt.Sprintf("--input-ipc-server=%s", pipePath),
+		"--ytdl-format=bestaudio/best",
 	}
 
 	if ytDlpPath != "" {
