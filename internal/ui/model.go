@@ -8,6 +8,7 @@ import (
 	"github.com/Arnel-rah/tunepipe/internal/notify"
 	"github.com/Arnel-rah/tunepipe/internal/player"
 	"github.com/Arnel-rah/tunepipe/internal/ytdlp"
+	"github.com/Arnel-rah/tunepipe/internal/notify"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -136,7 +137,6 @@ func performSearch(query string) tea.Cmd {
 
 func fetchTrack(engine *player.Engine, cache *ytdlp.URLCache, track ytdlp.Track) tea.Cmd {
 	return func() tea.Msg {
-		// Prefer local cached file for offline playback
 		if local := ytdlp.CachedFilePath(track.ID); local != "" {
 			if err := engine.PlayURL(local); err != nil {
 				return trackReadyMsg{track: track, err: err}
