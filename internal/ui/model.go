@@ -137,6 +137,7 @@ func performSearch(query string) tea.Cmd {
 
 func fetchTrack(engine *player.Engine, cache *ytdlp.URLCache, track ytdlp.Track) tea.Cmd {
 	return func() tea.Msg {
+		// Prefer local cached file for offline playback
 		if local := ytdlp.CachedFilePath(track.ID); local != "" {
 			if err := engine.PlayURL(local); err != nil {
 				return trackReadyMsg{track: track, err: err}
