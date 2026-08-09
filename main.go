@@ -16,6 +16,13 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+func ytDlpName() string {
+	if runtime.GOOS == "windows" {
+		return "yt-dlp.exe"
+	}
+	return "yt-dlp"
+}
+
 func ytDlpURL() string {
 	switch runtime.GOOS {
 	case "windows":
@@ -39,17 +46,17 @@ func localBinDir() (string, error) {
 	return dir, nil
 }
 
+func isWorkingBinary(path string) bool {
+	return exec.Command(path, "--version").Run() == nil
+}
+
 func downloadYtDlp() (string, error) {
 	dir, err := localBinDir()
 	if err != nil {
 		return "", err
 	}
 
-	name := "yt-dlp"
-	if runtime.GOOS == "windows" {
-		name = "yt-dlp.exe"
-	}
-	dest := filepath.Join(dir, name)
+	dest := filepath.Join(dir, ytDlpName())
 
 	fmt.Println("yt-dlp introuvable, téléchargement en cours...")
 	resp, err := http.Get(ytDlpURL())
@@ -83,23 +90,14 @@ func downloadYtDlp() (string, error) {
 }
 
 func ensureYtDlp() (string, error) {
-	if path, err := exec.LookPath("yt-dlp"); err == nil {
-		if exec.Command(path, "--version").Run() == nil {
-			return path, nil
-		}
+	if path, err := exec.LookPath("yt-dlp"); err == nil && isWorkingBinary(path) {
+		return path, nil
 	}
 
-	dir, err := localBinDir()
-	if err == nil {
-		name := "yt-dlp"
-		if runtime.GOOS == "windows" {
-			name = "yt-dlp.exe"
-		}
-		localPath := filepath.Join(dir, name)
-		if _, statErr := os.Stat(localPath); statErr == nil {
-			if exec.Command(localPath, "--version").Run() == nil {
-				return localPath, nil
-			}
+	if dir, err := localBinDir(); err == nil {
+		localPath := filepath.Join(dir, ytDlpName())
+		if _, err := os.Stat(localPath); err == nil && isWorkingBinary(localPath) {
+			return localPath, nil
 		}
 	}
 
@@ -119,10 +117,8 @@ func mpvInstallHint() string {
 
 func ensureMpv() error {
 	path, err := exec.LookPath("mpv")
-	if err == nil {
-		if exec.Command(path, "--version").Run() == nil {
-			return nil
-		}
+	if err == nil && isWorkingBinary(path) {
+		return nil
 	}
 
 	return fmt.Errorf(
@@ -139,6 +135,7 @@ func main() {
 		os.Exit(1)
 	}
 	ytdlp.SetBinary(ytDlpPath)
+
 	if err := ensureMpv(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
