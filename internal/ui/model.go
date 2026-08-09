@@ -8,6 +8,7 @@ import (
 	"github.com/Arnel-rah/tunepipe/internal/notify"
 	"github.com/Arnel-rah/tunepipe/internal/player"
 	"github.com/Arnel-rah/tunepipe/internal/ytdlp"
+	"github.com/Arnel-rah/tunepipe/internal/notify"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
