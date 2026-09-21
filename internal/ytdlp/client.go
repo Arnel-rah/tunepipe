@@ -61,6 +61,7 @@ func Search(query string, limit int) ([]Track, error) {
 		"-j",
 		"--no-warnings",
 		"--force-ipv4",
+		"--remote-components", "ejs:github",
 		"--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
 	}
 
@@ -181,6 +182,7 @@ func FetchDirectURL(videoID string) (string, error) {
 		"-g",
 		"--no-warnings",
 		"--force-ipv4",
+		"--remote-components", "ejs:github",
 		"--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
 	}
 
