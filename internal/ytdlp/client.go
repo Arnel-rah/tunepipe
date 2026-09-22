@@ -120,22 +120,26 @@ func SearchWithCache(query string, limit int) ([]Track, error) {
 	return results, nil
 }
 
-func tryFormats(binary, url string, baseArgs []string) (string, error) {
-	formatSelectors := []string{
-		"bestaudio[ext=m4a]",
-		"bestaudio[ext=webm]",
-		"bestaudio[ext=mp3]",
-		"bestaudio[ext=aac]",
-		"bestaudio[abr<=128]/bestaudio",
-		"bestaudio[abr<=192]/bestaudio",
+// formatSelectors est ordonné pour privilégier les débits audio bas
+// (économie de data), en évitant tout fallback vers un format vidéo+audio
+// combiné qui ferait exploser la consommation réseau.
+func formatSelectors() []string {
+	return []string{
+		"bestaudio[ext=m4a][abr<=64]",
+		"bestaudio[ext=webm][abr<=64]",
+		"bestaudio[acodec=opus][abr<=96]",
+		"bestaudio[abr<=96]",
+		"bestaudio[abr<=128]",
 		"bestaudio",
-		"best",
+		"worstaudio", // dernier recours: pire format AUDIO, jamais de vidéo
 	}
+}
 
+func tryFormats(binary, url string, baseArgs []string) (string, error) {
 	var lastErr error
 	var lastOutput string
 
-	for _, selector := range formatSelectors {
+	for _, selector := range formatSelectors() {
 		args := append([]string{"-f", selector}, baseArgs...)
 		args = append(args, url)
 
