@@ -8,9 +8,6 @@ import (
 	"time"
 )
 
-// ============================================
-// URL CACHE
-// ============================================
 
 type urlCacheEntry struct {
 	url    string
@@ -38,8 +35,6 @@ func NewURLCache(ttl time.Duration) *URLCache {
 		closeCh: make(chan struct{}),
 	}
 
-	// Prefetcher dédié : pool de workers bornés au lieu de
-	// goroutines non limitées à chaque appel de Prefetch.
 	for i := 0; i < prefetchWorkers; i++ {
 		go c.prefetchWorker()
 	}
@@ -87,7 +82,6 @@ func (c *URLCache) cleanupLoop() {
 						delete(c.entries, id)
 					}
 				default:
-					// fetch encore en cours, on ne touche pas
 				}
 			}
 			c.mu.Unlock()
@@ -97,8 +91,6 @@ func (c *URLCache) cleanupLoop() {
 	}
 }
 
-// Close arrête proprement les workers et le nettoyage périodique.
-// À appeler une fois, en fin de vie du programme.
 func (c *URLCache) Close() {
 	c.once.Do(func() {
 		close(c.closeCh)
@@ -191,10 +183,6 @@ func (c *URLCache) Stats() (int, int) {
 	return total, active
 }
 
-// ============================================
-// SEARCH CACHE
-// ============================================
-
 type searchEntry struct {
 	Results []Track
 	Expiry  time.Time
@@ -221,8 +209,6 @@ func getSearchCache() *SearchCache {
 	return globalSearchCache
 }
 
-// normalizeQuery uniformise la requête avant hachage pour que des
-// variations triviales (casse, espaces) partagent la même entrée.
 func normalizeQuery(query string) string {
 	return strings.ToLower(strings.TrimSpace(query))
 }
@@ -296,11 +282,6 @@ func (c *SearchCache) Stats() (int, int) {
 	}
 	return total, active
 }
-
-// ============================================
-// FONCTIONS GLOBALES POUR LE SEARCH CACHE
-// ============================================
-
 func GetSearchCache() *SearchCache {
 	return getSearchCache()
 }
