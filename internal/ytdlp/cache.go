@@ -39,7 +39,15 @@ func DownloadToCache(id string) (string, error) {
 	}
 	binary := getYTDLPBinary()
 	outPattern := filepath.Join(CacheDir, "%(id)s.%(ext)s")
-	args := []string{"-x", "--audio-format", "m4a", "--no-playlist", "-o", outPattern, fmt.Sprintf("https://www.youtube.com/watch?v=%s", id)}
+
+	args := []string{
+		"-f", "bestaudio[abr<=96]/bestaudio[abr<=128]/bestaudio",
+		"-x", "--audio-format", "m4a",
+		"--audio-quality", "5",
+		"--no-playlist",
+		"-o", outPattern,
+		fmt.Sprintf("https://www.youtube.com/watch?v=%s", id),
+	}
 	args = append(args, getCookiesOption()...)
 	cmd := exec.Command(binary, args...)
 	cmd.Stdout = nil
@@ -88,7 +96,6 @@ func savePlaycounts(m map[string]int) error {
 	return os.Rename(tmp, p)
 }
 
-// IncrementPlayCount increments persistent play count for a track and returns the new count.
 func IncrementPlayCount(id string) int {
 	playcountsMu.Lock()
 	defer playcountsMu.Unlock()
@@ -98,12 +105,9 @@ func IncrementPlayCount(id string) int {
 	return m[id]
 }
 
-// EnsureDownloaded downloads the track if not already present. Returns path or error.
 func EnsureDownloaded(id string) (string, error) {
 	if p := CachedFilePath(id); p != "" {
 		return p, nil
 	}
-	// avoid concurrent heavy downloads by a simple small sleep (best-effort)
-	// real implementation could add per-id locks
 	return DownloadToCache(id)
 }

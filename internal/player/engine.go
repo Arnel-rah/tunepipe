@@ -41,7 +41,11 @@ func NewEngine(pipeName string, ytDlpPath string) (*Engine, error) {
 		"--no-terminal",
 		"--really-quiet",
 		fmt.Sprintf("--input-ipc-server=%s", pipePath),
-		"--ytdl-format=bestaudio/best",
+		"--ytdl-format=bestaudio[abr<=64]/bestaudio[abr<=96]/bestaudio[abr<=128]/bestaudio",
+		"--cache=yes",
+		"--demuxer-max-bytes=8MiB",
+		"--demuxer-max-back-bytes=1MiB",
+		"--demuxer-readahead-secs=20",
 	}
 
 	if ytDlpPath != "" {
