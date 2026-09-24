@@ -282,6 +282,7 @@ func (c *SearchCache) Stats() (int, int) {
 	}
 	return total, active
 }
+
 func GetSearchCache() *SearchCache {
 	return getSearchCache()
 }

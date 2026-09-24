@@ -43,7 +43,7 @@ func DownloadToCache(id string) (string, error) {
 	args := []string{
 		"-f", "bestaudio[abr<=96]/bestaudio[abr<=128]/bestaudio",
 		"-x", "--audio-format", "m4a",
-		"--audio-quality", "5",
+		"--audio-quality", "5", // qualite VBR raisonnable (~96-128kbps) pour le re-encodage ffmpeg
 		"--no-playlist",
 		"-o", outPattern,
 		fmt.Sprintf("https://www.youtube.com/watch?v=%s", id),
@@ -53,7 +53,6 @@ func DownloadToCache(id string) (string, error) {
 	cmd.Stdout = nil
 	cmd.Stderr = nil
 	if err := cmd.Run(); err != nil {
-		// best-effort: return error
 		return "", fmt.Errorf("download error: %w", err)
 	}
 	if p := CachedFilePath(id); p != "" {
