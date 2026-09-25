@@ -37,6 +37,7 @@ Search, browse, and play audio streams directly from your terminal — no browse
 - 🎧 **Streaming playback** via `yt-dlp`, no local downloads required by default
 - ⚡ **URL cache with prefetch-on-navigate** — resolves the next track's stream URL while you browse, minimizing playback latency
 - 📉 **Data-conscious by default** — prioritizes low-bitrate audio formats (64–96 kbps) to reduce bandwidth usage, ideal on limited or metered connections
+- 💾 **Automatic local caching** — tracks played 3+ times are downloaded once (audio-only) and played from disk afterward, avoiding repeated streaming cost
 - 🌍 **Cross-platform** — Linux, macOS, Windows
 
 ## Requirements
@@ -120,6 +121,9 @@ theme: monochrome
 2. `tunepipe` shells out to `yt-dlp` to resolve a direct stream URL, preferring low-bitrate audio-only formats.
 3. The resolved URL is cached; while you're browsing or listening to the current track, `tunepipe` prefetches the next one in the background.
 4. Playback is handed off to `mpv` for decoding/output, minimizing the gap between selecting a track and hearing audio.
+5. Once a track has been played 3 times, `tunepipe` downloads an audio-only copy to `cache/` in the background and plays from disk on subsequent plays — no re-streaming, no re-resolving.
+
+> **Note:** the local cache currently has no automatic size limit or eviction. On long-term use it can grow indefinitely; clearing `cache/` manually reclaims the space with no side effects beyond re-downloading on the next 3rd play.
 
 ## Troubleshooting
 
@@ -136,6 +140,13 @@ which yt-dlp
 yt-dlp --version
 ```
 Remove the outdated system package if needed (`sudo apt remove yt-dlp`, `hash -r`).
+
+**`cache/` directory growing large**
+Frequently played tracks (3+ plays) are downloaded once to `cache/` for offline-style playback. There's no automatic cleanup yet — clear it manually if needed:
+```bash
+rm -rf cache/*.m4a cache/*.webm cache/*.mp3 cache/*.opus
+```
+This only removes downloaded audio files; `playcounts.json` (play history) is untouched.
 
 ## Development
 
