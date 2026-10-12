@@ -3,17 +3,22 @@ package ytdlp
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"strings"
 	"sync"
 	"time"
 )
 
+var errURLCacheClosed = errors.New("url cache closed")
+
+var fetchDirectURL = FetchDirectURL
 
 type urlCacheEntry struct {
 	url    string
 	err    error
 	ready  chan struct{}
 	expiry time.Time
+	done   sync.Once
 }
 
 type URLCache struct {
@@ -44,6 +49,23 @@ func NewURLCache(ttl time.Duration) *URLCache {
 	return c
 }
 
+func (c *URLCache) isClosed() bool {
+	select {
+	case <-c.closeCh:
+		return true
+	default:
+		return false
+	}
+}
+
+func (c *URLCache) completeEntry(entry *urlCacheEntry, url string, err error) {
+	entry.done.Do(func() {
+		entry.url = url
+		entry.err = err
+		close(entry.ready)
+	})
+}
+
 func (c *URLCache) prefetchWorker() {
 	for {
 		select {
@@ -57,10 +79,16 @@ func (c *URLCache) prefetchWorker() {
 			if !exists {
 				continue
 			}
-			url, err := FetchDirectURL(videoID)
-			entry.url = url
-			entry.err = err
-			close(entry.ready)
+			if c.isClosed() {
+				c.completeEntry(entry, "", errURLCacheClosed)
+				continue
+			}
+			url, err := fetchDirectURL(videoID)
+			c.mu.Lock()
+			if entry, ok := c.entries[videoID]; ok && entry == entry {
+				c.completeEntry(entry, url, err)
+			}
+			c.mu.Unlock()
 		case <-c.closeCh:
 			return
 		}
@@ -93,11 +121,27 @@ func (c *URLCache) cleanupLoop() {
 
 func (c *URLCache) Close() {
 	c.once.Do(func() {
+		c.mu.Lock()
+		for id, entry := range c.entries {
+			if entry != nil {
+				entry.done.Do(func() {
+					entry.url = ""
+					entry.err = errURLCacheClosed
+					close(entry.ready)
+				})
+			}
+			delete(c.entries, id)
+		}
+		c.mu.Unlock()
 		close(c.closeCh)
 	})
 }
 
 func (c *URLCache) Prefetch(videoID string) {
+	if c.isClosed() {
+		return
+	}
+
 	c.mu.Lock()
 	if entry, exists := c.entries[videoID]; exists && time.Now().Before(entry.expiry) {
 		c.mu.Unlock()
@@ -115,10 +159,16 @@ func (c *URLCache) Prefetch(videoID string) {
 	case c.jobs <- videoID:
 	default:
 		go func() {
-			url, err := FetchDirectURL(videoID)
-			entry.url = url
-			entry.err = err
-			close(entry.ready)
+			if c.isClosed() {
+				c.completeEntry(entry, "", errURLCacheClosed)
+				return
+			}
+			url, err := fetchDirectURL(videoID)
+			c.mu.Lock()
+			if current, ok := c.entries[videoID]; ok && current == entry {
+				c.completeEntry(entry, url, err)
+			}
+			c.mu.Unlock()
 		}()
 	}
 }
@@ -134,8 +184,16 @@ func (c *URLCache) Get(videoID string) (string, error) {
 	}
 	c.mu.Unlock()
 
-	<-entry.ready
-	return entry.url, entry.err
+	if entry == nil {
+		return "", errURLCacheClosed
+	}
+
+	select {
+	case <-entry.ready:
+		return entry.url, entry.err
+	case <-c.closeCh:
+		return "", errURLCacheClosed
+	}
 }
 
 func (c *URLCache) PrefetchWindow(tracks []Track, centerIdx int) {
