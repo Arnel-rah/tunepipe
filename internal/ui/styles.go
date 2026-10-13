@@ -14,7 +14,7 @@ var (
 	TitleStyle    = lipgloss.NewStyle().Foreground(White).Bold(true)
 	SubtitleStyle = lipgloss.NewStyle().Foreground(TextDimColor)
 
-	LogoStyle   = lipgloss.NewStyle().Foreground(PrimaryPink).Bold(true)
+	LogoStyle   = lipgloss.NewStyle().Foreground(Violet).Bold(true)
 	AccentStyle = lipgloss.NewStyle().Foreground(PrimaryPink).Bold(true)
 
 	StatLabelStyle = lipgloss.NewStyle().Foreground(TextMutedColor)
@@ -26,11 +26,11 @@ var (
 	StatusIdleStyle    = lipgloss.NewStyle().Foreground(TextMutedColor)
 	StatusLoadingStyle = lipgloss.NewStyle().Foreground(Violet).Bold(true)
 
-	ProgressBarStyle = lipgloss.NewStyle().Foreground(Amber)
+	ProgressBarStyle = lipgloss.NewStyle().Foreground(PrimaryPink)
 
-	ProgressHeadStyle = lipgloss.NewStyle().Foreground(Amber).Bold(true)
+	ProgressHeadStyle = lipgloss.NewStyle().Foreground(PrimaryPink).Bold(true)
 
-	ProgressTrackStyle = lipgloss.NewStyle().Foreground(LavenderMuted)
+	ProgressTrackStyle = lipgloss.NewStyle().Foreground(VioletDim)
 
 	SearchInputStyle = lipgloss.NewStyle().
 				Foreground(TextColor)
@@ -47,7 +47,8 @@ var (
 
 	RowSelectedStyle = lipgloss.NewStyle().
 				Padding(0, 1).
-				Background(VioletDim).
+				BorderLeft(true).
+				BorderForeground(PrimaryPink).
 				Foreground(White)
 
 	RowTitleStyle          = lipgloss.NewStyle().Foreground(TextDimColor)
@@ -56,7 +57,7 @@ var (
 	RowArtistSelectedStyle = lipgloss.NewStyle().Foreground(PrimaryPink)
 
 	KeyHintKeyStyle = lipgloss.NewStyle().
-			Foreground(PrimaryPink).
+			Foreground(Violet).
 			Bold(true)
 
 	KeyHintTextStyle = lipgloss.NewStyle().
@@ -67,7 +68,10 @@ var (
 	MutedStyle = lipgloss.NewStyle().Foreground(TextDimColor)
 
 	HeaderStyle = lipgloss.NewStyle().
-			Foreground(White)
+			Foreground(White).
+			BorderBottom(true).
+			BorderForeground(VioletDim).
+			Padding(0, 1)
 
 	NowPlayingTitleStyle  = lipgloss.NewStyle().Foreground(White).Bold(true)
 	NowPlayingArtistStyle = lipgloss.NewStyle().Foreground(TextDimColor)
@@ -81,73 +85,88 @@ var (
 	WelcomeHintStyle     = lipgloss.NewStyle().Foreground(Amber).Bold(true)
 
 	TopBarStyle = lipgloss.NewStyle().
-			Border(lipgloss.NormalBorder()).
-			BorderForeground(LavenderMuted).
+			BorderLeft(true).
+			BorderForeground(PrimaryPink).
 			Padding(0, 1)
 
 	TabBarStyle = lipgloss.NewStyle().
-			Border(lipgloss.NormalBorder()).
-			BorderForeground(LavenderMuted).
+			Foreground(TextMutedColor).
 			Padding(0, 0)
 
 	TabActiveStyle = lipgloss.NewStyle().
-			Foreground(Amber).
+			Foreground(Violet).
 			Bold(true).
-			Padding(0, 2)
+			Underline(true)
 
 	TabInactiveStyle = lipgloss.NewStyle().
 				Foreground(TextMutedColor).
-				Padding(0, 2)
+				Padding(0, 0)
 
 	TableHeaderStyle = lipgloss.NewStyle().
 				Foreground(TextMutedColor).
 				Bold(true)
 
 	ArtworkPanelStyle = lipgloss.NewStyle().
-				Border(lipgloss.NormalBorder()).
-				BorderForeground(LavenderMuted).
-				Padding(1, 1)
+				BorderLeft(true).
+				BorderForeground(VioletDim).
+				Padding(0, 1)
 
 	HeaderCardStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
+			BorderLeft(true).
 			BorderForeground(Violet).
-			Padding(0, 0).
+			Padding(0, 1).
 			MarginBottom(1)
 
 	PlayerCardStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(Amber).
-			Padding(0, 0).
+			BorderLeft(true).
+			BorderForeground(PrimaryPink).
+			Padding(0, 1).
 			MarginBottom(1)
 
 	SearchCardStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
+			BorderLeft(true).
 			BorderForeground(Magenta).
-			Padding(0, 0).
+			Padding(0, 1).
 			MarginBottom(1)
 
 	ResultsCardStyle = lipgloss.NewStyle().
-				Border(lipgloss.RoundedBorder()).
+				BorderLeft(true).
 				BorderForeground(PrimaryPink).
-				Padding(0, 0).
+				Padding(0, 1).
 				MarginBottom(1)
 
 	QueueCardStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
+			BorderLeft(true).
 			BorderForeground(VioletDim).
-			Padding(0, 0).
+			Padding(0, 1).
 			MarginBottom(1)
 
 	ProgressCardStyle = lipgloss.NewStyle().
-				Border(lipgloss.RoundedBorder()).
+				BorderLeft(true).
 				BorderForeground(LavenderMuted).
-				Padding(0, 0).
+				Padding(0, 1).
 				MarginBottom(1)
 
 	FooterCardStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(TextDimColor).
-			Padding(0, 0)
+			BorderTop(true).
+			BorderForeground(VioletDim).
+			Padding(1, 0)
+
+	SectionLabelStyle = lipgloss.NewStyle().
+				Foreground(TextMutedColor).
+				Bold(true).
+				Transform(strings.ToUpper)
+
+	SearchShellStyle = lipgloss.NewStyle().
+				BorderBottom(true).
+				BorderForeground(Violet).
+				Padding(0, 0)
+
+	ResultsShellStyle = lipgloss.NewStyle().
+				BorderTop(true).
+				BorderBottom(true).
+				BorderForeground(VioletDim).
+				Padding(1, 0)
 )
 
 func Divider(width int) string {
