@@ -85,7 +85,7 @@ func (c *URLCache) prefetchWorker() {
 			}
 			url, err := fetchDirectURL(videoID)
 			c.mu.Lock()
-			if entry, ok := c.entries[videoID]; ok && entry == entry {
+			if current, ok := c.entries[videoID]; ok && current == entry {
 				c.completeEntry(entry, url, err)
 			}
 			c.mu.Unlock()
