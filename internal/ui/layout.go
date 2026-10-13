@@ -42,6 +42,8 @@ func (m Model) View() string {
 	var sections []string
 	sections = append(sections, header)
 	sections = append(sections, "")
+	sections = append(sections, renderTabs(m, width))
+	sections = append(sections, "")
 	sections = append(sections, player)
 	sections = append(sections, "")
 	sections = append(sections, search)
@@ -62,6 +64,6 @@ func (m Model) View() string {
 	body := lipgloss.JoinVertical(lipgloss.Left, sections...)
 
 	return lipgloss.NewStyle().
-		Padding(0, 1).
+		Padding(1, 1).
 		Render(body)
 }
