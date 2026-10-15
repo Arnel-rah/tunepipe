@@ -24,12 +24,13 @@ func renderQueue(m Model, width int) string {
 		end = len(m.queue)
 	}
 
-	lines := make([]string, 0, maxItems+1)
-	lines = append(lines, renderTableHeader(width))
+	lines := make([]string, 0, maxItems+2)
+	lines = append(lines, SectionLabelStyle.Render("03  QUEUE"))
+	lines = append(lines, renderTableHeader(width-2))
 	for i := start; i < end; i++ {
 		track := m.queue[i]
 		lines = append(lines, renderResultLine(track, i == m.queueCursor, width))
 	}
 
-	return strings.Join(lines, "\n")
+	return ResultsShellStyle.Width(width).Render(strings.Join(lines, "\n"))
 }

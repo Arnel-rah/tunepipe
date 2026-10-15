@@ -8,16 +8,16 @@ import (
 )
 
 func renderHeader(m Model, width int) string {
-	logo := LogoStyle.Render(IconMusic + " TunePipe")
+	logo := LogoStyle.Render("◆ TUNEPIPE")
 
 	var stats string
 	if width < 50 {
-		stats = fmt.Sprintf("%dh %d", m.totalMinutes/60, m.scrobbles)
+		stats = fmt.Sprintf("%dh · %d tracks", m.totalMinutes/60, m.scrobbles)
 	} else {
-		stats = fmt.Sprintf("%s %dh %s %d",
-			StatLabelStyle.Render("listened"),
+		stats = fmt.Sprintf("%s %dh  %s %d",
+			StatLabelStyle.Render("TIME"),
 			m.totalMinutes/60,
-			StatLabelStyle.Render("tracks"),
+			StatLabelStyle.Render("PLAYED"),
 			m.scrobbles,
 		)
 	}
