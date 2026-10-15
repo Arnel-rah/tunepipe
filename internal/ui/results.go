@@ -39,8 +39,9 @@ func renderResults(m Model, width int) string {
 		end = len(m.searchResults)
 	}
 
-	lines := make([]string, 0, maxItems+1)
-	lines = append(lines, renderTableHeader(width))
+	lines := make([]string, 0, maxItems+2)
+	lines = append(lines, SectionLabelStyle.Render("02  RESULTS"))
+	lines = append(lines, renderTableHeader(width-2))
 
 	for i := start; i < end; i++ {
 		track := m.searchResults[i]
@@ -49,7 +50,7 @@ func renderResults(m Model, width int) string {
 		)
 	}
 
-	return strings.Join(lines, "\n")
+	return ResultsShellStyle.Width(width).Render(strings.Join(lines, "\n"))
 }
 
 func renderTableHeader(width int) string {

@@ -105,7 +105,7 @@ func renderFooter(m Model, width int) string {
 		))
 	}
 
-	keysText := strings.Join(parts, " | ")
+	keysText := strings.Join(parts, "  ")
 
 	if width < 70 && len(parts) > 3 {
 		keysText = strings.Join(parts[:3], " | ")

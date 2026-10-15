@@ -8,17 +8,17 @@ import (
 
 func renderPlayer(m Model, width int) string {
 	if m.currentTrack == nil {
-		return TopBarStyle.Width(width).Render(TextMutedStyle.Render(IconMusic + "  ready"))
+		return PlayerCardStyle.Width(width).Render(TextMutedStyle.Render("NOW PLAYING  ·  " + IconMusic + "  ready"))
 	}
 
 	elapsed := fmt.Sprintf("%d:%02d", int(m.elapsedTime.Minutes()), int(m.elapsedTime.Seconds())%60)
 	total := fmt.Sprintf("%d:%02d", int(m.currentTrack.Duration/60), int(m.currentTrack.Duration)%60)
 
 	left := lipgloss.NewStyle().
-		Width(14).
-		Render(TextDimStyle.Render(IconMusic + " " + elapsed + "/" + total))
+		Width(16).
+		Render(TextDimStyle.Render("NOW PLAYING\n" + elapsed + "/" + total))
 
-	centerWidth := width - 28
+	centerWidth := width - 32
 	if centerWidth < 18 {
 		centerWidth = 18
 	}
@@ -33,9 +33,9 @@ func renderPlayer(m Model, width int) string {
 		Render(NowPlayingArtistStyle.Render(truncate(m.currentTrack.Uploader, centerWidth)))
 	center := lipgloss.JoinVertical(lipgloss.Center, title, artist)
 
-	rightText := "Queue 0"
+	rightText := "QUEUE 0"
 	if len(m.queue) > 0 {
-		rightText = fmt.Sprintf("Queue %d", len(m.queue))
+		rightText = fmt.Sprintf("QUEUE %d", len(m.queue))
 	}
 	right := lipgloss.NewStyle().
 		Width(14).
@@ -43,5 +43,5 @@ func renderPlayer(m Model, width int) string {
 		Render(NowPlayingMetaStyle.Render(rightText))
 
 	row := lipgloss.JoinHorizontal(lipgloss.Top, left, center, right)
-	return TopBarStyle.Width(width).Render(row)
+	return PlayerCardStyle.Width(width).Render(row)
 }
