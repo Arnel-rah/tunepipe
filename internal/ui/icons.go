@@ -20,8 +20,9 @@ const (
 	IconStar    = "★"
 
 	CharRule     = "─"
-	CharProgress = "█"
-	CharTrack    = "░"
+	CharProgress = "━"
+	CharTrack    = "─"
+	CharHead     = "●"
 	IconQueued   = "≡"
 )
 

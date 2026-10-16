@@ -32,6 +32,10 @@ var (
 
 	ProgressTrackStyle = lipgloss.NewStyle().Foreground(VioletDim)
 
+	ProgressPercentStyle = lipgloss.NewStyle().
+				Foreground(TextMutedColor).
+				Bold(true)
+
 	SearchInputStyle = lipgloss.NewStyle().
 				Foreground(TextColor)
 
