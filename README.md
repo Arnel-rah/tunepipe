@@ -99,6 +99,7 @@ Launches the TUI. From there:
 | `↑` / `↓` | Navigate list |
 | `Enter` | Play selected track |
 | `Space` | Pause / resume |
+| `+` / `-` or `]` / `[` | Increase / decrease volume |
 | `n` | Next track |
 | `p` | Previous track |
 | `q` | Quit |

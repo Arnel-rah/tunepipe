@@ -8,26 +8,43 @@ import (
 )
 
 func renderHeader(m Model, width int) string {
-	logo := LogoStyle.Render("◆ TUNEPIPE")
+	brand := lipgloss.JoinHorizontal(
+		lipgloss.Left,
+		LogoStyle.Render("◆ TUNEPIPE"),
+		"  ",
+		HeaderSubtitleStyle.Render("AUDIO PLAYER"),
+	)
 
 	var stats string
 	if width < 50 {
-		stats = fmt.Sprintf("%dh · %d tracks", m.totalMinutes/60, m.scrobbles)
-	} else {
+		stats = fmt.Sprintf("%dh %d", m.totalMinutes/60, m.scrobbles)
+	} else if width < 70 {
 		stats = fmt.Sprintf("%s %dh  %s %d",
-			StatLabelStyle.Render("TIME"),
+			HeaderSubtitleStyle.Render("TIME"),
 			m.totalMinutes/60,
-			StatLabelStyle.Render("PLAYED"),
+			HeaderSubtitleStyle.Render("PLAYED"),
 			m.scrobbles,
+		)
+	} else {
+		stats = fmt.Sprintf("%s %s  %s  %s %s",
+			StatLabelStyle.Render("TIME"),
+			HeaderStatValueStyle.Render(fmt.Sprintf("%dh", m.totalMinutes/60)),
+			HeaderStatSeparatorStyle.Render("·"),
+			StatLabelStyle.Render("PLAYED"),
+			HeaderStatValueStyle.Render(fmt.Sprintf("%d", m.scrobbles)),
 		)
 	}
 
-	gap := width - lipgloss.Width(logo) - lipgloss.Width(stats)
+	if width < 50 {
+		brand = LogoStyle.Render("◆ TUNEPIPE")
+	}
+
+	gap := width - lipgloss.Width(brand) - lipgloss.Width(stats)
 	if gap < 1 {
 		gap = 1
 	}
 
-	content := fmt.Sprintf("%s%s%s", logo, strings.Repeat(" ", gap), stats)
+	content := fmt.Sprintf("%s%s%s", brand, strings.Repeat(" ", gap), stats)
 
 	return HeaderStyle.Width(width).Render(content)
 }

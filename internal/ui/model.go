@@ -60,6 +60,7 @@ type Model struct {
 	isLoading     bool
 	statusMsg     string
 	statusKind    string
+	volume        int
 	width         int
 	height        int
 
@@ -90,6 +91,7 @@ func NewModel(engine *player.Engine) Model {
 		searchInput: ti,
 		statusMsg:   "ready",
 		statusKind:  "idle",
+		volume:      100,
 		width:       80,
 		height:      24,
 		queueSet:    make(map[string]struct{}),
@@ -220,6 +222,16 @@ func playNextAuto(m Model) (Model, tea.Cmd) {
 func setStatus(m *Model, msg, kind string) {
 	m.statusMsg = msg
 	m.statusKind = kind
+}
+
+func clampVolume(volume int) int {
+	if volume < 0 {
+		return 0
+	}
+	if volume > 100 {
+		return 100
+	}
+	return volume
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -501,6 +513,32 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.isPlaying = true
 			setStatus(&m, "playing", "playing")
 		}
+		return m, nil
+
+	case "+", "=", "]":
+		if m.engine == nil {
+			return m, nil
+		}
+		nextVolume := clampVolume(m.volume + 5)
+		if err := m.engine.SetVolume(nextVolume); err != nil {
+			setStatus(&m, fmt.Sprintf("error: %v", err), "error")
+			return m, nil
+		}
+		m.volume = nextVolume
+		setStatus(&m, fmt.Sprintf("volume %d%%", m.volume), "idle")
+		return m, nil
+
+	case "-", "[":
+		if m.engine == nil {
+			return m, nil
+		}
+		nextVolume := clampVolume(m.volume - 5)
+		if err := m.engine.SetVolume(nextVolume); err != nil {
+			setStatus(&m, fmt.Sprintf("error: %v", err), "error")
+			return m, nil
+		}
+		m.volume = nextVolume
+		setStatus(&m, fmt.Sprintf("volume %d%%", m.volume), "idle")
 		return m, nil
 
 	case "n":
