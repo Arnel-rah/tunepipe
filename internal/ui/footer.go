@@ -45,9 +45,12 @@ func renderFooter(m Model, width int) string {
 
 	statusText := style.Render(icon + " " + strings.ToUpper(status))
 
+	volumeText := AccentStyle.Render(fmt.Sprintf("VOL %d%%", m.volume))
 	if len(m.queue) > 0 {
 		queueText := AccentStyle.Render(fmt.Sprintf("%s %d queued", IconQueued, len(m.queue)))
-		statusText = statusText + "  " + queueText
+		statusText = statusText + "  " + queueText + "  " + volumeText
+	} else {
+		statusText = statusText + "  " + volumeText
 	}
 
 	if width < 50 {
@@ -63,6 +66,7 @@ func renderFooter(m Model, width int) string {
 		{"↑↓", "Move"},
 		{"A", "Toggle queue"},
 		{"Q", "Queue"},
+		{"[/]", "Volume"},
 	}
 	if m.showQueue {
 		keys[3].label = "Clear queue"
@@ -81,6 +85,7 @@ func renderFooter(m Model, width int) string {
 				{"ENTER", "Play now"},
 				{"A", "Clear queue"},
 				{"Q", "Results"},
+				{"[/]", "Volume"},
 			}
 		} else {
 			keys = []struct {
@@ -93,6 +98,7 @@ func renderFooter(m Model, width int) string {
 				{"A", "Toggle queue"},
 				{"ENTER", "Select"},
 				{"Q", "Queue"},
+				{"[/]", "Volume"},
 			}
 		}
 	}

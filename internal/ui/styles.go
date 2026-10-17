@@ -77,6 +77,16 @@ var (
 			BorderForeground(VioletDim).
 			Padding(0, 1)
 
+	HeaderSubtitleStyle = lipgloss.NewStyle().
+				Foreground(TextMutedColor)
+
+	HeaderStatValueStyle = lipgloss.NewStyle().
+				Foreground(White).
+				Bold(true)
+
+	HeaderStatSeparatorStyle = lipgloss.NewStyle().
+					Foreground(VioletDim)
+
 	NowPlayingTitleStyle  = lipgloss.NewStyle().Foreground(White).Bold(true)
 	NowPlayingArtistStyle = lipgloss.NewStyle().Foreground(TextDimColor)
 	NowPlayingMetaStyle   = lipgloss.NewStyle().Foreground(LavenderMuted)

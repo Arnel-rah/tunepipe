@@ -149,6 +149,27 @@ func (e *Engine) Resume() error {
 	return nil
 }
 
+func (e *Engine) SetVolume(volume int) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+
+	if e.ipcClient == nil {
+		return fmt.Errorf("ipc client not connected")
+	}
+	if volume < 0 {
+		volume = 0
+	}
+	if volume > 100 {
+		volume = 100
+	}
+
+	if err := e.ipcClient.SendExec("set_property", "volume", volume); err != nil {
+		return err
+	}
+
+	return e.ipcClient.SendExec("set_property", "mute", volume == 0)
+}
+
 func (e *Engine) Stop() {
 	e.mu.Lock()
 	defer e.mu.Unlock()
