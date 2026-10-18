@@ -38,8 +38,11 @@ func NewEngine(pipeName string, ytDlpPath string) (*Engine, error) {
 	args := []string{
 		"--idle",
 		"--no-video",
+		"--ao=auto",
 		"--no-terminal",
 		"--really-quiet",
+		"--volume=100",
+		"--mute=no",
 		fmt.Sprintf("--input-ipc-server=%s", pipePath),
 		"--ytdl-format=bestaudio[abr<=64]/bestaudio[abr<=96]/bestaudio[abr<=128]/bestaudio",
 		"--cache=yes",
@@ -100,7 +103,7 @@ func (e *Engine) PlayURL(url string) error {
 	time.Sleep(200 * time.Millisecond)
 
 	for i := 0; i < 3; i++ {
-		if err := e.ipcClient.SendExec("set", "pause", "no"); err == nil {
+		if err := e.ipcClient.SendExec("set_property", "pause", false); err == nil {
 			break
 		}
 		time.Sleep(50 * time.Millisecond)

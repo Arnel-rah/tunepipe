@@ -23,6 +23,11 @@ type Command struct {
 	RequestID uint64        `json:"request_id,omitempty"`
 }
 
+type response struct {
+	RequestID uint64 `json:"request_id"`
+	Error     string `json:"error"`
+}
+
 func Connect(pipeName string) (*Client, error) {
 	var conn io.ReadWriteCloser
 	var err error
@@ -61,8 +66,27 @@ func (c *Client) SendExec(args ...interface{}) error {
 	}
 
 	data = append(data, '\n')
-	_, err = c.conn.Write(data)
-	return err
+	if _, err = c.conn.Write(data); err != nil {
+		return err
+	}
+
+	for c.scanner.Scan() {
+		var result response
+		if err := json.Unmarshal(c.scanner.Bytes(), &result); err != nil {
+			continue
+		}
+		if result.RequestID != c.reqID {
+			continue
+		}
+		if result.Error != "success" && result.Error != "" {
+			return fmt.Errorf("mpv command failed: %s", result.Error)
+		}
+		return nil
+	}
+	if err := c.scanner.Err(); err != nil {
+		return err
+	}
+	return io.EOF
 }
 
 func (c *Client) Close() error {
