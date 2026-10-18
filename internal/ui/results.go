@@ -72,7 +72,10 @@ func renderResultLine(track ytdlp.Track, selected bool, width int) string {
 
 	title := truncate(track.Title, titleWidth)
 	artist := truncate(track.Uploader, artistWidth)
-	duration := fmt.Sprintf("%d:%02d", int(track.Duration/60), int(track.Duration)%60)
+	duration := "--:--"
+	if track.Duration > 0 {
+		duration = fmt.Sprintf("%d:%02d", int(track.Duration/60), int(track.Duration)%60)
+	}
 
 	left := titleStyle.
 		Width(titleWidth).

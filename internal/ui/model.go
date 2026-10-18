@@ -157,6 +157,23 @@ func fetchTrack(engine *player.Engine, cache *ytdlp.URLCache, track ytdlp.Track)
 	}
 }
 
+func (m Model) prefetchYouTube(tracks []ytdlp.Track, centerIdx int) {
+	if len(tracks) == 0 {
+		return
+	}
+	start := centerIdx - 1
+	if start < 0 {
+		start = 0
+	}
+	end := centerIdx + 3
+	if end >= len(tracks) {
+		end = len(tracks) - 1
+	}
+	for i := start; i <= end; i++ {
+		m.cache.Prefetch(tracks[i].ID)
+	}
+}
+
 func playTrack(m Model, track ytdlp.Track) (Model, tea.Cmd) {
 	m.currentTrack = &track
 	m.elapsedTime = 0
@@ -252,7 +269,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.scrobbles++
 			}
 
-			if float64(secs) >= m.currentTrack.Duration {
+			if m.currentTrack.Duration > 0 && float64(secs) >= m.currentTrack.Duration {
 				m.elapsedTime = time.Duration(m.currentTrack.Duration) * time.Second
 				m.isPlaying = false
 				setStatus(&m, "finished", "idle")
@@ -277,7 +294,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if n := len(msg.tracks); n > 0 {
 			setStatus(&m, fmt.Sprintf("%d results", n), "idle")
-			m.cache.PrefetchWindow(msg.tracks, m.cursor)
+			m.prefetchYouTube(msg.tracks, m.cursor)
 		} else {
 			setStatus(&m, "no results", "idle")
 		}
@@ -319,12 +336,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.totalMinutes += int(msg.track.Duration / 60)
 		setStatus(&m, "playing", "playing")
 
-		m.cache.PrefetchWindow(m.searchResults, m.cursor)
+		m.prefetchYouTube(m.searchResults, m.cursor)
 		if len(m.queue) > 0 {
-			m.cache.PrefetchWindow(m.queue, 0)
+			m.prefetchYouTube(m.queue, 0)
 		}
 
-		if count := ytdlp.IncrementPlayCount(msg.track.ID); count >= 3 {
+		if ytdlp.IncrementPlayCount(msg.track.ID) >= 3 {
 			id := msg.track.ID
 			go func() { _, _ = ytdlp.EnsureDownloaded(id) }()
 		}
@@ -492,7 +509,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			setStatus(&m, "loading...", "idle")
 			return m, nil
 		}
-		if m.elapsedTime.Seconds() >= m.currentTrack.Duration {
+		if m.currentTrack.Duration > 0 && m.elapsedTime.Seconds() >= m.currentTrack.Duration {
 			m.isPlaying = false
 			setStatus(&m, "finished", "idle")
 			return m, nil

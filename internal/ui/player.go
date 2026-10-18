@@ -12,7 +12,10 @@ func renderPlayer(m Model, width int) string {
 	}
 
 	elapsed := fmt.Sprintf("%d:%02d", int(m.elapsedTime.Minutes()), int(m.elapsedTime.Seconds())%60)
-	total := fmt.Sprintf("%d:%02d", int(m.currentTrack.Duration/60), int(m.currentTrack.Duration)%60)
+	total := "--:--"
+	if m.currentTrack.Duration > 0 {
+		total = fmt.Sprintf("%d:%02d", int(m.currentTrack.Duration/60), int(m.currentTrack.Duration)%60)
+	}
 
 	left := lipgloss.NewStyle().
 		Width(16).
