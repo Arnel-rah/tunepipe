@@ -1,10 +1,12 @@
 package ui
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/Arnel-rah/tunepipe/internal/lyrics"
 	"github.com/Arnel-rah/tunepipe/internal/notify"
 	"github.com/Arnel-rah/tunepipe/internal/player"
 	"github.com/Arnel-rah/tunepipe/internal/ytdlp"
@@ -23,6 +25,12 @@ type trackReadyMsg struct {
 	track     ytdlp.Track
 	directURL string
 	err       error
+}
+
+type lyricsMsg struct {
+	trackID string
+	lines   []lyrics.Line
+	err     error
 }
 
 type prefetchTickMsg struct {
@@ -48,6 +56,7 @@ var spinnerFrames = [...]string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦",
 type Model struct {
 	engine        *player.Engine
 	cache         *ytdlp.URLCache
+	lyricsClient  *lyrics.Client
 	searchInput   textinput.Model
 	isSearching   bool
 	searchPending bool
@@ -56,6 +65,9 @@ type Model struct {
 	selectionGen  int
 	searchGen     int
 	currentTrack  *ytdlp.Track
+	lyrics        []lyrics.Line
+	lyricsLoading bool
+	showLyrics    bool
 	isPlaying     bool
 	isLoading     bool
 	statusMsg     string
@@ -86,15 +98,16 @@ func NewModel(engine *player.Engine) Model {
 	ti.PlaceholderStyle = lipgloss.NewStyle().Foreground(TextMutedColor)
 
 	return Model{
-		engine:      engine,
-		cache:       ytdlp.NewURLCache(cacheTTL),
-		searchInput: ti,
-		statusMsg:   "ready",
-		statusKind:  "idle",
-		volume:      100,
-		width:       80,
-		height:      24,
-		queueSet:    make(map[string]struct{}),
+		engine:       engine,
+		cache:        ytdlp.NewURLCache(cacheTTL),
+		lyricsClient: lyrics.NewClient(nil),
+		searchInput:  ti,
+		statusMsg:    "ready",
+		statusKind:   "idle",
+		volume:       100,
+		width:        80,
+		height:       24,
+		queueSet:     make(map[string]struct{}),
 	}
 }
 
@@ -143,6 +156,7 @@ func fetchTrack(engine *player.Engine, cache *ytdlp.URLCache, track ytdlp.Track)
 			if err := engine.PlayURL(local); err != nil {
 				return trackReadyMsg{track: track, err: err}
 			}
+
 			return trackReadyMsg{track: track, directURL: local}
 		}
 
@@ -154,6 +168,13 @@ func fetchTrack(engine *player.Engine, cache *ytdlp.URLCache, track ytdlp.Track)
 			return trackReadyMsg{track: track, err: err}
 		}
 		return trackReadyMsg{track: track, directURL: directURL}
+	}
+}
+
+func fetchLyrics(client *lyrics.Client, track ytdlp.Track) tea.Cmd {
+	return func() tea.Msg {
+		lines, err := client.Get(context.Background(), track.Uploader, track.Title)
+		return lyricsMsg{trackID: track.ID, lines: lines, err: err}
 	}
 }
 
@@ -262,7 +283,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tickMsg:
 		m.tickCount++
 		if m.isPlaying && m.currentTrack != nil && !m.isLoading {
-			m.elapsedTime += time.Second
+			if position, err := m.engine.TimePosition(); err == nil && position >= 0 {
+				m.elapsedTime = time.Duration(position * float64(time.Second))
+			} else {
+				m.elapsedTime += time.Second
+			}
 			secs := int(m.elapsedTime.Seconds())
 
 			if secs%10 == 0 {
@@ -333,6 +358,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.isLoading = false
 		m.currentTrack = &msg.track
 		m.elapsedTime = 0
+		m.lyrics = nil
+		m.lyricsLoading = true
+		m.showLyrics = true
 		m.totalMinutes += int(msg.track.Duration / 60)
 		setStatus(&m, "playing", "playing")
 
@@ -349,6 +377,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		t := msg.track
 		go func() { _ = notify.NotifyTrack(t) }()
 
+		return m, fetchLyrics(m.lyricsClient, msg.track)
+
+	case lyricsMsg:
+		if m.currentTrack != nil && m.currentTrack.ID == msg.trackID {
+			m.lyrics = msg.lines
+			m.lyricsLoading = false
+			if msg.err != nil {
+				setStatus(&m, "playing · lyrics unavailable", "playing")
+			}
+		}
 		return m, nil
 	}
 
@@ -418,6 +456,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch keyMsg.String() {
 	case "q", "ctrl+c":
 		m.confirmQuit = true
+		return m, nil
+
+	case "l":
+		m.showLyrics = !m.showLyrics
 		return m, nil
 
 	case "/":

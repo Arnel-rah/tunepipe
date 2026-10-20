@@ -36,6 +36,7 @@ Search, browse, and play audio streams directly from your terminal — no browse
 - 🖥️ **TUI interface** built with [Bubbletea](https://github.com/charmbracelet/bubbletea) — clean, minimal, monochrome design
 - 🎧 **Streaming playback** via `yt-dlp`, no local downloads required by default
 - 🎧 **YouTube playback** via `yt-dlp`, with no third-party music providers
+- ♪ **Synchronized lyrics** from LRCLIB when available
 - ⚡ **URL cache with prefetch-on-navigate** — resolves the next track's stream URL while you browse, minimizing playback latency
 - 📉 **Data-conscious by default** — prioritizes low-bitrate audio formats (64–96 kbps) to reduce bandwidth usage, ideal on limited or metered connections
 - 💾 **Automatic local caching** — tracks played 3+ times are downloaded once (audio-only) and played from disk afterward, avoiding repeated streaming cost
@@ -104,6 +105,7 @@ Launches the TUI. From there:
 | `n` | Next track |
 | `p` | Previous track |
 | `q` | Quit |
+| `l` | Show/hide lyrics |
 
 > Adjust the key bindings above to match your actual implementation.
 
