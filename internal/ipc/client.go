@@ -24,8 +24,9 @@ type Command struct {
 }
 
 type response struct {
-	RequestID uint64 `json:"request_id"`
-	Error     string `json:"error"`
+	RequestID uint64          `json:"request_id"`
+	Error     string          `json:"error"`
+	Data      json.RawMessage `json:"data"`
 }
 
 func Connect(pipeName string) (*Client, error) {
@@ -51,6 +52,15 @@ func Connect(pipeName string) (*Client, error) {
 }
 
 func (c *Client) SendExec(args ...interface{}) error {
+	_, err := c.request(args...)
+	return err
+}
+
+func (c *Client) GetProperty(name string) (json.RawMessage, error) {
+	return c.request("get_property", name)
+}
+
+func (c *Client) request(args ...interface{}) (json.RawMessage, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -62,12 +72,12 @@ func (c *Client) SendExec(args ...interface{}) error {
 
 	data, err := json.Marshal(cmd)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	data = append(data, '\n')
 	if _, err = c.conn.Write(data); err != nil {
-		return err
+		return nil, err
 	}
 
 	for c.scanner.Scan() {
@@ -79,14 +89,14 @@ func (c *Client) SendExec(args ...interface{}) error {
 			continue
 		}
 		if result.Error != "success" && result.Error != "" {
-			return fmt.Errorf("mpv command failed: %s", result.Error)
+			return nil, fmt.Errorf("mpv command failed: %s", result.Error)
 		}
-		return nil
+		return result.Data, nil
 	}
 	if err := c.scanner.Err(); err != nil {
-		return err
+		return nil, err
 	}
-	return io.EOF
+	return nil, io.EOF
 }
 
 func (c *Client) Close() error {

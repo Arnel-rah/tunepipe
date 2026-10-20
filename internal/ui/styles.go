@@ -90,6 +90,11 @@ var (
 	NowPlayingTitleStyle  = lipgloss.NewStyle().Foreground(White).Bold(true)
 	NowPlayingArtistStyle = lipgloss.NewStyle().Foreground(TextDimColor)
 	NowPlayingMetaStyle   = lipgloss.NewStyle().Foreground(LavenderMuted)
+	LyricsActiveStyle     = lipgloss.NewStyle().Foreground(PrimaryPink).Bold(true)
+	LyricsPanelStyle      = lipgloss.NewStyle().
+				BorderLeft(true).
+				BorderForeground(Violet).
+				Padding(0, 1)
 
 	RailStyle    = lipgloss.NewStyle().Foreground(PrimaryPink).Bold(true)
 	RailDimStyle = lipgloss.NewStyle().Foreground(LavenderMuted)
@@ -134,8 +139,7 @@ var (
 	PlayerCardStyle = lipgloss.NewStyle().
 			BorderLeft(true).
 			BorderForeground(PrimaryPink).
-			Padding(0, 1).
-			MarginBottom(1)
+			Padding(0, 1)
 
 	SearchCardStyle = lipgloss.NewStyle().
 			BorderLeft(true).

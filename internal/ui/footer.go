@@ -67,6 +67,7 @@ func renderFooter(m Model, width int) string {
 		{"A", "Toggle queue"},
 		{"Q", "Queue"},
 		{"[/]", "Volume"},
+		{"L", "Lyrics"},
 	}
 	if m.showQueue {
 		keys[3].label = "Clear queue"
@@ -86,6 +87,7 @@ func renderFooter(m Model, width int) string {
 				{"A", "Clear queue"},
 				{"Q", "Results"},
 				{"[/]", "Volume"},
+				{"L", "Lyrics"},
 			}
 		} else {
 			keys = []struct {
@@ -99,6 +101,7 @@ func renderFooter(m Model, width int) string {
 				{"ENTER", "Select"},
 				{"Q", "Queue"},
 				{"[/]", "Volume"},
+				{"L", "Lyrics"},
 			}
 		}
 	}

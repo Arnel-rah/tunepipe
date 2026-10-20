@@ -1,6 +1,7 @@
 package player
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -10,6 +11,26 @@ import (
 
 	"github.com/Arnel-rah/tunepipe/internal/ipc"
 )
+
+func (e *Engine) TimePosition() (float64, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.ipcClient == nil {
+		return 0, fmt.Errorf("ipc client not connected")
+	}
+	data, err := e.ipcClient.GetProperty("time-pos")
+	if err != nil {
+		return 0, err
+	}
+	var position *float64
+	if err := json.Unmarshal(data, &position); err != nil {
+		return 0, err
+	}
+	if position == nil {
+		return 0, fmt.Errorf("mpv has no active time position")
+	}
+	return *position, nil
+}
 
 type Engine struct {
 	cmd       *exec.Cmd
@@ -38,17 +59,22 @@ func NewEngine(pipeName string, ytDlpPath string) (*Engine, error) {
 	args := []string{
 		"--idle",
 		"--no-video",
-		"--ao=auto",
 		"--no-terminal",
-		"--really-quiet",
 		"--volume=100",
 		"--mute=no",
+		"--audio-device=auto",
+		"--audio-channels=stereo",
 		fmt.Sprintf("--input-ipc-server=%s", pipePath),
 		"--ytdl-format=bestaudio[abr<=64]/bestaudio[abr<=96]/bestaudio[abr<=128]/bestaudio",
 		"--cache=yes",
 		"--demuxer-max-bytes=8MiB",
 		"--demuxer-max-back-bytes=1MiB",
 		"--demuxer-readahead-secs=20",
+	}
+	if runtime.GOOS == "linux" {
+		args = append(args, "--ao=pipewire")
+	} else {
+		args = append(args, "--ao=auto")
 	}
 
 	if ytDlpPath != "" {
@@ -102,6 +128,12 @@ func (e *Engine) PlayURL(url string) error {
 
 	time.Sleep(200 * time.Millisecond)
 
+	if err := e.ipcClient.SendExec("set_property", "volume", 100); err != nil {
+		return err
+	}
+	if err := e.ipcClient.SendExec("set_property", "mute", false); err != nil {
+		return err
+	}
 	for i := 0; i < 3; i++ {
 		if err := e.ipcClient.SendExec("set_property", "pause", false); err == nil {
 			break

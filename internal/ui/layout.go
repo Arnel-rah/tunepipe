@@ -27,6 +27,7 @@ func (m Model) View() string {
 
 	header := renderHeader(m, width)
 	player := renderPlayer(m, width)
+	lyrics := renderLyrics(m, width)
 	search := renderSearch(m, width)
 
 	var results string
@@ -40,30 +41,31 @@ func (m Model) View() string {
 	footer := renderFooter(m, width)
 
 	var sections []string
-	sections = append(sections, header)
-	sections = append(sections, "")
-	sections = append(sections, renderTabs(m, width))
-	sections = append(sections, "")
+	sections = append(sections, header, "")
 	sections = append(sections, player)
-	sections = append(sections, "")
-	sections = append(sections, search)
-
-	if results != "" {
-		sections = append(sections, "")
-		sections = append(sections, results)
+	if m.showLyrics && m.currentTrack != nil {
+		// Lyrics mode prioritizes readable lines over the results table.
+		sections = append(sections, "", lyrics)
+		if m.isSearching {
+			sections = append(sections, search)
+		}
+	} else {
+		sections = append(sections, renderTabs(m, width), search)
+		if results != "" {
+			sections = append(sections, results)
+		}
 	}
 
 	if progress != "" {
 		sections = append(sections, "")
-		sections = append(sections, progress)
+		sections = append(sections, "", progress)
 	}
 
-	sections = append(sections, "")
-	sections = append(sections, footer)
+	sections = append(sections, "", footer)
 
 	body := lipgloss.JoinVertical(lipgloss.Left, sections...)
 
 	return lipgloss.NewStyle().
-		Padding(1, 1).
+		Padding(0, 1).
 		Render(body)
 }
