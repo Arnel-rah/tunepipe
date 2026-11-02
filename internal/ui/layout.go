@@ -50,7 +50,7 @@ func (m Model) View() string {
 			sections = append(sections, search)
 		}
 	} else {
-		sections = append(sections, renderTabs(m, width), search)
+		sections = append(sections, renderTabs(m, width), "", search)
 		if results != "" {
 			sections = append(sections, results)
 		}

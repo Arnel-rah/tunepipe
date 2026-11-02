@@ -90,11 +90,14 @@ var (
 	NowPlayingTitleStyle  = lipgloss.NewStyle().Foreground(White).Bold(true)
 	NowPlayingArtistStyle = lipgloss.NewStyle().Foreground(TextDimColor)
 	NowPlayingMetaStyle   = lipgloss.NewStyle().Foreground(LavenderMuted)
+	NowPlayingLabelStyle  = lipgloss.NewStyle().Foreground(PrimaryPink).Bold(true)
+	NowPlayingTimeStyle   = lipgloss.NewStyle().Foreground(TextMutedColor)
 	LyricsActiveStyle     = lipgloss.NewStyle().Foreground(PrimaryPink).Bold(true)
 	LyricsPanelStyle      = lipgloss.NewStyle().
 				BorderLeft(true).
 				BorderForeground(Violet).
-				Padding(0, 1)
+				Padding(0, 1).
+				MarginTop(0)
 
 	RailStyle    = lipgloss.NewStyle().Foreground(PrimaryPink).Bold(true)
 	RailDimStyle = lipgloss.NewStyle().Foreground(LavenderMuted)

@@ -9,10 +9,14 @@ func renderLyrics(m Model, width int) string {
 		return ""
 	}
 	if m.lyricsLoading {
-		return LyricsPanelStyle.Width(width).Render(TextMutedStyle.Render("♪ loading lyrics..."))
+		return LyricsPanelStyle.Width(width).Render(
+			AccentStyle.Render("♪ LYRICS") + "  " + TextMutedStyle.Render("loading..."),
+		)
 	}
 	if len(m.lyrics) == 0 {
-		return LyricsPanelStyle.Width(width).Render(TextMutedStyle.Render("♪ lyrics unavailable"))
+		return LyricsPanelStyle.Width(width).Render(
+			AccentStyle.Render("♪ LYRICS") + "  " + TextMutedStyle.Render("unavailable"),
+		)
 	}
 
 	active := 0
@@ -32,7 +36,7 @@ func renderLyrics(m Model, width int) string {
 		end = len(m.lyrics)
 	}
 
-	lines := []string{SectionLabelStyle.Render("LYRICS")}
+	lines := []string{AccentStyle.Render("♪ LYRICS")}
 	for i := start; i < end; i++ {
 		style := TextDimStyle
 		prefix := "  "
