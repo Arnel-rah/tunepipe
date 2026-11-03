@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -18,6 +19,8 @@ type Line struct {
 
 type Client struct {
 	httpClient *http.Client
+	mu         sync.RWMutex
+	cache      map[string][]Line
 }
 
 type response struct {
@@ -34,14 +37,23 @@ func NewClient(httpClient *http.Client) *Client {
 	if httpClient == nil {
 		httpClient = &http.Client{Timeout: 8 * time.Second}
 	}
-	return &Client{httpClient: httpClient}
+	return &Client{httpClient: httpClient, cache: make(map[string][]Line)}
 }
 
 func (c *Client) Get(ctx context.Context, artist, title string) ([]Line, error) {
 	artist = cleanMetadata(artist)
 	title = cleanMetadata(title)
+	cacheKey := strings.ToLower(artist + "\x00" + title)
+	c.mu.RLock()
+	cached, ok := c.cache[cacheKey]
+	c.mu.RUnlock()
+	if ok {
+		return cloneLines(cached), nil
+	}
+
 	lines, err := c.get(ctx, artist, title)
 	if err == nil {
+		c.store(cacheKey, lines)
 		return lines, nil
 	}
 
@@ -65,13 +77,29 @@ func (c *Client) Get(ctx context.Context, artist, title string) ([]Line, error) 
 	}
 	for _, result := range results {
 		if result.SyncedLyrics != "" {
-			return parseSynced(result.SyncedLyrics)
+			lines, parseErr := parseSynced(result.SyncedLyrics)
+			if parseErr == nil {
+				c.store(cacheKey, lines)
+			}
+			return lines, parseErr
 		}
 		if result.PlainLyrics != "" {
-			return plainLines(result.PlainLyrics), nil
+			lines := plainLines(result.PlainLyrics)
+			c.store(cacheKey, lines)
+			return lines, nil
 		}
 	}
 	return nil, err
+}
+
+func (c *Client) store(key string, lines []Line) {
+	c.mu.Lock()
+	c.cache[key] = cloneLines(lines)
+	c.mu.Unlock()
+}
+
+func cloneLines(lines []Line) []Line {
+	return append([]Line(nil), lines...)
 }
 
 func (c *Client) get(ctx context.Context, artist, title string) ([]Line, error) {

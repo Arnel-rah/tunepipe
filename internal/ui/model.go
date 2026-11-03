@@ -186,7 +186,7 @@ func (m Model) prefetchYouTube(tracks []ytdlp.Track, centerIdx int) {
 	if start < 0 {
 		start = 0
 	}
-	end := centerIdx + 3
+	end := centerIdx + 2
 	if end >= len(tracks) {
 		end = len(tracks) - 1
 	}

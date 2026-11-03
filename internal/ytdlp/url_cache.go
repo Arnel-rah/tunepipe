@@ -200,7 +200,7 @@ func (c *URLCache) PrefetchWindow(tracks []Track, centerIdx int) {
 	if c == nil || len(tracks) == 0 {
 		return
 	}
-	const ahead = 3
+	const ahead = 2
 	const behind = 1
 	start := centerIdx - behind
 	if start < 0 {
