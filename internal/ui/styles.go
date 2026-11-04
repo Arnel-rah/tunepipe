@@ -14,7 +14,7 @@ var (
 	TitleStyle    = lipgloss.NewStyle().Foreground(White).Bold(true)
 	SubtitleStyle = lipgloss.NewStyle().Foreground(TextDimColor)
 
-	LogoStyle   = lipgloss.NewStyle().Foreground(Violet).Bold(true)
+	LogoStyle   = lipgloss.NewStyle().Foreground(Cyan).Bold(true)
 	AccentStyle = lipgloss.NewStyle().Foreground(PrimaryPink).Bold(true)
 
 	StatLabelStyle = lipgloss.NewStyle().Foreground(TextMutedColor)
@@ -53,7 +53,8 @@ var (
 				Padding(0, 1).
 				BorderLeft(true).
 				BorderForeground(PrimaryPink).
-				Foreground(White)
+				Foreground(White).
+				Bold(true)
 
 	RowTitleStyle          = lipgloss.NewStyle().Foreground(TextDimColor)
 	RowTitleSelectedStyle  = lipgloss.NewStyle().Foreground(White).Bold(true)
@@ -61,7 +62,7 @@ var (
 	RowArtistSelectedStyle = lipgloss.NewStyle().Foreground(PrimaryPink)
 
 	KeyHintKeyStyle = lipgloss.NewStyle().
-			Foreground(Violet).
+			Foreground(Cyan).
 			Bold(true)
 
 	KeyHintTextStyle = lipgloss.NewStyle().
@@ -74,7 +75,7 @@ var (
 	HeaderStyle = lipgloss.NewStyle().
 			Foreground(White).
 			BorderBottom(true).
-			BorderForeground(VioletDim).
+			BorderForeground(Cyan).
 			Padding(0, 1)
 
 	HeaderSubtitleStyle = lipgloss.NewStyle().
@@ -85,7 +86,7 @@ var (
 				Bold(true)
 
 	HeaderStatSeparatorStyle = lipgloss.NewStyle().
-					Foreground(VioletDim)
+					Foreground(PrimaryPink)
 
 	NowPlayingTitleStyle  = lipgloss.NewStyle().Foreground(White).Bold(true)
 	NowPlayingArtistStyle = lipgloss.NewStyle().Foreground(TextDimColor)
@@ -95,7 +96,7 @@ var (
 	LyricsActiveStyle     = lipgloss.NewStyle().Foreground(PrimaryPink).Bold(true)
 	LyricsPanelStyle      = lipgloss.NewStyle().
 				BorderLeft(true).
-				BorderForeground(Violet).
+				BorderForeground(Cyan).
 				Padding(0, 1).
 				MarginTop(0)
 
@@ -108,7 +109,7 @@ var (
 
 	TopBarStyle = lipgloss.NewStyle().
 			BorderLeft(true).
-			BorderForeground(PrimaryPink).
+			BorderForeground(Cyan).
 			Padding(0, 1)
 
 	TabBarStyle = lipgloss.NewStyle().
@@ -116,7 +117,7 @@ var (
 			Padding(0, 0)
 
 	TabActiveStyle = lipgloss.NewStyle().
-			Foreground(Violet).
+			Foreground(Cyan).
 			Bold(true).
 			Underline(true)
 
@@ -135,7 +136,7 @@ var (
 
 	HeaderCardStyle = lipgloss.NewStyle().
 			BorderLeft(true).
-			BorderForeground(Violet).
+			BorderForeground(Cyan).
 			Padding(0, 1).
 			MarginBottom(1)
 
@@ -146,7 +147,7 @@ var (
 
 	SearchCardStyle = lipgloss.NewStyle().
 			BorderLeft(true).
-			BorderForeground(Magenta).
+			BorderForeground(Cyan).
 			Padding(0, 1).
 			MarginBottom(1)
 
@@ -158,19 +159,19 @@ var (
 
 	QueueCardStyle = lipgloss.NewStyle().
 			BorderLeft(true).
-			BorderForeground(VioletDim).
+			BorderForeground(Violet).
 			Padding(0, 1).
 			MarginBottom(1)
 
 	ProgressCardStyle = lipgloss.NewStyle().
 				BorderLeft(true).
-				BorderForeground(LavenderMuted).
+				BorderForeground(Amber).
 				Padding(0, 1).
 				MarginBottom(1)
 
 	FooterCardStyle = lipgloss.NewStyle().
 			BorderTop(true).
-			BorderForeground(VioletDim).
+			BorderForeground(Cyan).
 			Padding(1, 0)
 
 	SectionLabelStyle = lipgloss.NewStyle().
@@ -180,7 +181,7 @@ var (
 
 	SearchShellStyle = lipgloss.NewStyle().
 				BorderBottom(true).
-				BorderForeground(Violet).
+				BorderForeground(Magenta).
 				Padding(0, 0)
 
 	ResultsShellStyle = lipgloss.NewStyle().
