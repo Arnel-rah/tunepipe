@@ -33,14 +33,15 @@ var (
 	ProgressTrackStyle = lipgloss.NewStyle().Foreground(VioletDim)
 
 	ProgressPercentStyle = lipgloss.NewStyle().
-				Foreground(TextMutedColor).
+				Foreground(Cyan).
 				Bold(true)
 
 	SearchInputStyle = lipgloss.NewStyle().
 				Foreground(TextColor)
 
 	SearchInputFocusedStyle = lipgloss.NewStyle().
-				Foreground(White)
+				Foreground(Cyan).
+				Bold(true)
 
 	SearchPlaceholderStyle = lipgloss.NewStyle().
 				Foreground(TextMutedColor)
@@ -88,9 +89,9 @@ var (
 	HeaderStatSeparatorStyle = lipgloss.NewStyle().
 					Foreground(PrimaryPink)
 
-	NowPlayingTitleStyle  = lipgloss.NewStyle().Foreground(White).Bold(true)
-	NowPlayingArtistStyle = lipgloss.NewStyle().Foreground(TextDimColor)
-	NowPlayingMetaStyle   = lipgloss.NewStyle().Foreground(LavenderMuted)
+	NowPlayingTitleStyle  = lipgloss.NewStyle().Foreground(Cyan).Bold(true)
+	NowPlayingArtistStyle = lipgloss.NewStyle().Foreground(Lavender)
+	NowPlayingMetaStyle   = lipgloss.NewStyle().Foreground(Violet)
 	NowPlayingLabelStyle  = lipgloss.NewStyle().Foreground(PrimaryPink).Bold(true)
 	NowPlayingTimeStyle   = lipgloss.NewStyle().Foreground(TextMutedColor)
 	LyricsActiveStyle     = lipgloss.NewStyle().Foreground(PrimaryPink).Bold(true)
@@ -175,7 +176,7 @@ var (
 			Padding(1, 0)
 
 	SectionLabelStyle = lipgloss.NewStyle().
-				Foreground(TextMutedColor).
+				Foreground(Cyan).
 				Bold(true).
 				Transform(strings.ToUpper)
 
